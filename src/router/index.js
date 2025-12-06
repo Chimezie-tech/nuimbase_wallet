@@ -18,9 +18,9 @@ const router = createRouter({
       path: '/dashboard',
       component: DashboardLayout,
       children: [
-        { path: '', name: 'DashboardHome', component: CreateWallet },     // default dashboard page
-        { path: '/send', name: 'Send', component: Send },
-        {path: '/change-pin', name: 'Change pin', component: ChangePin}
+        { path: '', name: 'DashboardHome', component: CreateWallet },
+        { path: 'send', name: 'Send', component: Send },        // FIXED
+        { path: 'change-pin', name: 'ChangePin', component: ChangePin } // FIXED
       ]
     },
 
