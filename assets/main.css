@@ -1,0 +1,7 @@
+@import url('https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css');
+
+@import 'tailwindcss';
+
+* {
+  box-sizing: border-box;
+}
