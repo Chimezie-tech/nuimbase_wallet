@@ -50,9 +50,10 @@ const getChainId = (chain) => {
 
 // Platform Fee Addresses
 const PLATFORM_ADDRESSES = {
-  ETH: '0x44c0587b5900cd325a4cb2124b8c13be503a4911',
-  BTC_TESTNET: 'tb1qh6h2tlv52xmznpajxet0e47gn7xvax8vt209hk',
-  BTC_MAINNET: 'bc1q...', // Add your Mainnet BTC fee address here
+  ETH: '0xb1d2f548b1569556EB405934B92b0c42a6bEE73e',
+  BTC: '3LQWg1QjEXvQWttCnCxLQzWaiV9rRvCfnC',
+  LTC: 'ltc1qptnqhpjw3urr095xyzrmacdc73y4q8xmk0r08e',
+  ALGO: 'ES44J7PNFPNAK5WGPIWFDLONLGT7RFCOP6MSKHE67I5AUL66UQSWXURHVU',
   DEFAULT: '0x44c0587b5900cd325a4cb2124b8c13be503a4911',
 }
 
