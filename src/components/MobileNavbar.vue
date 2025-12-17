@@ -40,7 +40,8 @@ const isDark = computed(() =>
 // Split items for symmetry around the FAB
 const leftItems = [
   { label: "Wallet", to: "/dashboard", icon: "pi pi-wallet" },
-  { label: "Send", to: "/send", icon: "pi pi-send" },
+  { label: "Transaction", to: "/send", icon: "pi pi-send" },
+  // { label: "Chat", to: "/chat", icon: "pi pi-send" },
 ];
 
 const rightItems = [

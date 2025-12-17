@@ -2,218 +2,168 @@
   <div class="layout">
     <!-- SIDEBAR (Desktop fixed, iPad drawer only) -->
     <aside :class="['sidebar', { open: isOpen }]">
-      <h2 class="logo">Nuimbase</h2>
+
+      <!-- Brand Logo -->
+      <div class="logo-area">
+        <h2 class="logo-text">Nuimbase</h2>
+      </div>
+
       <ul class="menu">
         <li>
-          <RouterLink to="/dashboard" class="menu-link" @click="closeSidebar">
-            <i class="pi pi-wallet"></i> Wallet
+          <!-- Wallet Link -->
+          <RouterLink
+            to="/dashboard"
+            class="menu-link"
+            active-class="active-link"
+            @click="closeSidebar"
+          >
+            <i class="pi pi-wallet"></i>
+            <span>Wallet</span>
           </RouterLink>
         </li>
         <li>
-          <RouterLink to="/send" class="menu-link" @click="closeSidebar">
-            <i class="pi pi-send"></i> Transaction
+          <!-- Transaction Link -->
+          <RouterLink
+            to="/send"
+            class="menu-link"
+            active-class="active-link"
+            @click="closeSidebar"
+          >
+            <i class="pi pi-send"></i>
+            <span>Transaction</span>
           </RouterLink>
         </li>
+        
         <li>
-          <RouterLink to="/change-pin" class="menu-link" @click="closeSidebar">
-            <i class="pi pi-cog"></i> Settings
+          <!-- Settings Link -->
+          <RouterLink
+            to="/change-pin"
+            class="menu-link"
+            active-class="active-link"
+            @click="closeSidebar"
+          >
+            <i class="pi pi-shield"></i>
+            <span>Settings</span>
           </RouterLink>
         </li>
       </ul>
     </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
-      <!-- BURGER (iPad only) -->
-      <button class="burger" @click="toggleSidebar">
-        <i class="pi pi-bars"></i>
-      </button>
-      <slot />
-    </main>
-
-    <!-- Overlay for iPad drawer -->
+    <!-- BURGER (iPad/Mobile Logic Handled via Overlay) -->
     <div v-if="isOpen" class="overlay" @click="closeSidebar"></div>
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
-import { RouterLink, useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import "primeicons/primeicons.css";
 
-const router = useRouter();
 const isOpen = ref(false);
-
-const toggleSidebar = () => {
-  isOpen.value = !isOpen.value;
-};
-
-const closeSidebar = () => {
-  isOpen.value = false;
-};
-
+const closeSidebar = () => { isOpen.value = false; };
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-}
-
-/* -------------------------
-   SIDEBAR BASE
--------------------------- */
+/* SIDEBAR BASE */
 .sidebar {
   width: 160px;
   height: 100vh;
-  padding: 16px;
   background: #ffffff;
-  color: #555;
-  transition: all 0.3s ease;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+  z-index: 1001;
+
+  /* Fixed position ensures it stays on left while scrolling */
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
-.logo {
-  margin-bottom: 24px;
-  font-size: 14px;
-  font-weight: 600;
+/* LOGO AREA */
+.logo-area {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1bac4b;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* MENU */
 .menu {
   list-style: none;
-  padding: 0;
+  padding: 20px 0;
   margin: 0;
-}
-
-.menu li {
-  margin: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .menu-link {
   display: flex;
   align-items: center;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
-  color: grey;
-  gap: 8px;
-  transition: 0.2s;
-  background: none;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  padding: 8px 0;
+  color: #64748b;
+  padding: 12px 20px;
+  transition: all 0.2s ease;
+  border-right: 3px solid transparent; /* Placeholder for active border */
+}
+
+.menu-link i {
+  font-size: 16px;
+  margin-right: 10px;
 }
 
 .menu-link:hover {
   color: #1bac4b;
+  background: #f8fafc;
 }
 
-.logout-btn {
-  font-family: inherit;
-}
-
-.overlay {
-  display: none;
+/* --- ACTIVE STATE --- */
+/* Vue Router applies this class automatically to the active route */
+.active-link {
+  color: #1bac4b !important;
+  background: #f0fdf4; /* Very light green bg */
+  border-right-color: #1bac4b; /* Brand border on right */
+  font-weight: 600;
 }
 
 /* -------------------------
-   MOBILE (NO SIDEBAR, NO BURGER)
+   RESPONSIVE LOGIC
 -------------------------- */
+
 @media (max-width: 767px) {
-  .sidebar {
-    display: none !important;
-  }
-
-  .burger {
-    display: none !important;
-  }
-
-  .content {
-    width: 100%;
-    padding: 16px;
-    flex: 1;
-    margin-left: 0;
-  }
-
-  .overlay {
-    display: none !important;
-  }
+  .sidebar { display: none !important; }
 }
 
-/* -------------------------
-   IPAD (DRAWER WITH BURGER)
--------------------------- */
 @media (min-width: 768px) and (max-width: 1024px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    transform: translateX(100%);
-    z-index: 1001;
+    transform: translateX(-100%);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
   }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .content {
-    width: 100%;
-    padding: 20px;
-    flex: 1;
-    margin-left: 0;
-  }
-
-  .burger {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    font-size: 20px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    z-index: 1100;
-    display: block;
-    color: #555;
-  }
-
-  .burger:hover {
-    color: #1bac4b;
-  }
+  .sidebar.open { transform: translateX(0); }
 
   .overlay {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
   }
 }
 
-/* -------------------------
-   DESKTOP (FIXED SIDEBAR, NO BURGER)
--------------------------- */
 @media (min-width: 1025px) {
   .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
     transform: translateX(0);
+    box-shadow: none;
   }
-
-  .burger {
-    display: none;
-  }
-
-  .content {
-    margin-left: 160px;
-    padding: 20px;
-    flex: 1;
-  }
-
-  .overlay {
-    display: none;
-  }
+  .overlay { display: none; }
 }
 </style>

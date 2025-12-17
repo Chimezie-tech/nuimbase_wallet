@@ -1,157 +1,287 @@
+<script setup>
+import { ref } from 'vue';
+import { supabase } from "@/scripts/supabase";
+
+
+const isOpen = ref(false);
+const isSubmitting = ref(false);
+const showSuccess = ref(false);
+
+const form = ref({
+  full_name: '',
+  email: '',
+  message: ''
+});
+
+const toggleChat = () => {
+  isOpen.value = !isOpen.value;
+  // Reset form state on reopen
+  if (isOpen.value && showSuccess.value) {
+    showSuccess.value = false;
+    form.value = { full_name: '', email: '', message: '' };
+  }
+};
+
+const submitForm = async () => {
+  if (!form.value.email || !form.value.message) {
+    alert("Please fill in email and message");
+    return;
+  }
+  isSubmitting.value = true;
+  try {
+    const { error } = await supabase.from('customerCare').insert([{
+      full_name: form.value.full_name,
+      email: form.value.email,
+      message: form.value.message
+    }]);
+    if (error) throw error;
+    showSuccess.value = true;
+  } catch (error) {
+    console.error(error);
+    alert("Error sending message");
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+</script>
+
 <template>
-  <div class="page-wrap">
-    <div class="layout">
+  <div class="customer-care-wrapper">
 
-      <!-- Top item -->
-      <section class="panel mt-5">
-        <h5 class="title" style="font-family: Poppins; font-size: 14px; font-weight: 600;">How do you reach us?</h5>
+    <!-- 1. CHAT WINDOW (Professional Design restored) -->
+    <transition name="slide-up">
+      <div v-if="isOpen" class="chat-window shadow-lg">
 
-        <p class="text" style="font-family: Nunito; font-size: 14px;">
-            With supporting text below as a natural lead-in to additional content.
-        </p>
-
-        <RouterLink class="btn main-btn call-btn" to="" style="font-family: Poppins; font-size: 14px; font-weight: 600;">
-            Call Now
-        </RouterLink>
-
-        <!-- OPENING HOURS -->
-        <div class="mt-5">
-            <h6 style="font-family: Poppins; font-size: 14px; font-weight: 600;">Opening Hours</h6>
-            <ul class="opening-hours">
-              <li style="font-family: Nunito; font-size: 14px;">Monday – Friday: 9:00 AM – 6:00 PM</li>
-              <li style="font-family: Nunito; font-size: 14px;">Saturday: 10:00 AM – 4:00 PM</li>
-              <li style="font-family: Nunito; font-size: 14px;">Sunday: Closed</li>
-            </ul>
+        <!-- Professional Header -->
+        <div class="chat-header">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="m-0 fw-bold text-white" style="font-family: Poppins; letter-spacing: 0.5px; font-size: 12px;">Support Team</h6>
+              <span class="status-dot"></span>
+              <small class="text-white-50" style="font-family: Nunito; font-size: 11px;">We typically reply in a few minutes</small>
+            </div>
+            <!-- Close 'X' inside header -->
+            <button @click="toggleChat" class="btn-close btn-close-white small-close"></button>
+          </div>
         </div>
-      </section>
 
-      <!-- Bottom item (form) -->
-      <section class="panel mt-4">
-        <form class="form">
-          <input type="text" placeholder="Full name" style="font-family: Nunito; font-size: 14px;" class="input" />
-          <input type="text" placeholder="Country/State" style="font-family: Nunito; font-size: 14px;" class="input" />
-          <input type="email" placeholder="Email" style="font-family: Nunito; font-size: 14px;" class="input" />
-          <textarea placeholder="Drop a message" style="font-family: Nunito; font-size: 14px;" class="textarea"></textarea>
-          <button type="submit" class="btn submit-btn w-100" style="font-family: Poppins; font-size: 14px;">Submit</button>
-        </form>
-      </section>
+        <!-- Body -->
+        <div class="chat-body">
 
-    </div>
+          <!-- Success State -->
+          <div v-if="showSuccess" class="text-center py-4 success-state">
+            <div class="icon-circle mb-3">
+              <i class="bi bi-check-lg"></i>
+            </div>
+            <h6 style="font-family: Poppins; font-weight: 600;">Message Sent!</h6>
+            <p class="small text-muted mb-3" style="font-family: Nunito;">
+              We have received your request and will email you shortly.
+            </p>
+            <button @click="toggleChat" class="btn btn-sm btn-outline-success px-4" style="border-radius: 10px;">Close</button>
+          </div>
+
+          <!-- Form State -->
+          <form v-else @submit.prevent="submitForm">
+            <p class="text-muted mb-3" style="font-family: Nunito; font-size: 12px; line-height: 1.4;">
+              Hello! 👋 <br>How can <span style="color: #1bac4b;">Nuimbase</span> help you today?
+            </p>
+
+            <div class="mb-2">
+              <input v-model="form.full_name" type="text" class="form-control compact-input" placeholder="Your Name">
+            </div>
+
+            <div class="mb-2">
+              <input v-model="form.email" type="email" class="form-control compact-input" placeholder="Email Address *" required>
+            </div>
+
+            <div class="mb-3">
+              <textarea v-model="form.message" class="form-control compact-input" rows="3" placeholder="Write your message..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn w-100 submit-btn" :disabled="isSubmitting">
+              <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+              {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+            </button>
+          </form>
+
+        </div>
+
+        <!-- Professional Footer -->
+        <div class="chat-footer text-center">
+          <i class="bi bi-shield-lock-fill me-1"></i>
+          <span>Powered by Nuimbase Support</span>
+        </div>
+
+      </div>
+    </transition>
+
+
+    <!-- 2. THE NEW SINGLE TRIGGER BUTTON -->
+    <!-- Replaces the round button with a "Pill" shape containing text -->
+    <button class="chat-trigger-btn shadow" @click="toggleChat">
+      <div v-if="!isOpen" class="d-flex align-items-center gap-2">
+        <i class="bi bi-chat-text-fill"></i>
+        <span>Chat Support</span>
+      </div>
+      <div v-else>
+        <i class="bi bi-x-lg" style="font-size: 18px;"></i>
+      </div>
+    </button>
+
   </div>
 </template>
 
-<script setup>
-import { RouterLink } from "vue-router";
-</script>
-
 <style scoped>
-/* Page centering */
-.page-wrap {
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: #fff;
-}
-
-/* Layout */
-.layout {
+/* WRAPPER */
+.customer-care-wrapper {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  max-width: 1080px;
+  align-items: flex-end;
 }
 
-/* Row on desktop */
-@media (min-width: 992px) {
-  .layout {
-    flex-direction: row;
-  }
-  .panel {
-    width: 50%;
-  }
-}
-
-/* Panels */
-.panel {
-  background: transparent;
-  padding: 0;
-}
-
-.title { margin: 0 0 8px; }
-.text { margin: 0 0 12px; }
-
-/* Buttons */
-.main-btn {
+/* --- NEW TRIGGER BUTTON (The Pill) --- */
+.chat-trigger-btn {
   background-color: #1bac4b;
-  color: #fff;
-  font-family: Poppins, sans-serif;
-  border-radius: 4px;
-  padding: 8px 16px;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.call-btn {
-  display: inline-flex;
-  justify-content: center;
-}
-
-.w-100 { width: 100%; }
-
-.submit-btn {
-  display: flex;
-  justify-content: center;  /* keeps text centered on mobile */
-  align-items: center;
-  background: #1bac4b;
   color: white;
+  border: none;
+  border-radius: 30px; /* Pill shape */
+  padding: 8px 15px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px; /* Ensures round shape when only 'X' is showing */
+  min-height: 50px;
 }
 
-/* Form sizing */
-.form {
-  max-width: 560px;
+.chat-trigger-btn:hover {
+  background-color: #148038;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(27, 172, 75, 0.4);
+}
+
+/* --- CHAT WINDOW --- */
+.chat-window {
+  width: 250px; /* Compact width */
+  height: 370px;
+  min-height: auto;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 15px; /* Space between window and button */
+  border: 1px solid #f0f0f0;
+}
+
+/* Header */
+.chat-header {
+  background: linear-gradient(135deg, #1bac4b 0%, #148038 100%);
+  padding: 10px 15px;
+  position: relative;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: #7affb5;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.small-close {
+  opacity: 0.7;
+}
+
+/* Body */
+.chat-body {
+  padding: 20px;
+  background-color: #fff;
+}
+
+.compact-input {
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.compact-input:focus {
+  background-color: #fff;
+  border-color: #1bac4b;
+  box-shadow: none;
+}
+
+/* Submit Button */
+.submit-btn {
+  background-color: #1bac4b;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 5px;
+}
+
+.submit-btn:hover {
+  background-color: #1a252f;
+}
+
+/* Success State Icons */
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  background-color: #e8f7ed;
+  color: #1bac4b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
   margin: 0 auto;
 }
 
-/* Inputs and textarea */
-.input,
-.textarea {
-  width: 100%;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  background: #f3f5f7;
-  border: none;
-  border-radius: 4px;
-  font-family: Poppins, sans-serif;
+/* Footer */
+.chat-footer {
+  background-color: #f8f9fa;
+  padding: 8px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 8px;
+  color: #adb5bd;
+  border-top: 1px solid #f1f1f1;
 }
 
-.input:focus,
-.textarea:focus {
-  outline: 2px solid #29974D;
-  background: #eef6fb;
+/* ANIMATION */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.textarea {
-  height: 96px;
-  resize: none;
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
 }
 
-/* Icon */
-.icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* Opening hours */
-.opening-hours {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-family: Nunito;
-  font-size: 14px;
+/* Responsive */
+@media (max-width: 576px) {
+  .customer-care-wrapper {
+    bottom: 20px;
+    right: 20px;
+  }
+  .chat-window {
+    width: 280px;
+  }
 }
 </style>

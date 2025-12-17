@@ -23,15 +23,14 @@
         </button>
 
         <!-- DESKTOP MENU -->
-<div class="navbar-collapse d-none d-lg-block">
-  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-    <li class="nav-item"><a class="nav-link custom-link" href="#contact">Contact</a></li>
-    <li class="nav-item"><a class="nav-link custom-link" href="#testimonial">Testimonials</a></li>
-    <li class="nav-item"><a class="nav-link custom-link" href="#fag">Fag</a></li>
-    <li class="nav-item"><a class="nav-link custom-link" href="#about">About</a></li>
-  </ul>
-</div>
-
+        <div class="navbar-collapse d-none d-lg-block">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link custom-link" href="#contact">Contact</a></li>
+            <li class="nav-item"><a class="nav-link custom-link" href="#testimonial">Testimonials</a></li>
+            <li class="nav-item"><a class="nav-link custom-link" href="#faq">Faq</a></li>
+            <li class="nav-item"><a class="nav-link custom-link" href="#about">About</a></li>
+          </ul>
+        </div>
 
       </div>
     </nav>

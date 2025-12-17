@@ -26,6 +26,9 @@
             {{ activeForm === 'login' ? 'Log in' : activeForm === 'signup' ? 'Sign Up' : 'Recover Password' }}
           </div>
         </div>
+        <RouterLink to="/" class="home-link" title="Go back home">
+          <i class="pi pi-home"></i>
+        </RouterLink>
       </div>
 
       <p class="auth-text" v-if="activeForm !== 'forgot'">
@@ -41,17 +44,14 @@
       <!-- LOGIN FORM -->
       <template v-if="activeForm === 'login'">
 
-        <div class="card flex justify-center">
-        <InputText type="text" v-model="form.email" placeholder="Enter email" />
+        <div class="input-group">
+          <label>Email</label>
+          <input v-model="form.email" type="email" class="input-field" placeholder="Your email" required />
         </div>
 
-        <!-- <div class="input-group">
+        <div class="input-group">
           <label>Password</label>
           <input v-model="form.password" type="password" class="input-field" placeholder="Your password" required />
-        </div> -->
-
-        <div class="card flex justify-center">
-        <Password v-model="form.password" toggleMask placeholder="Enter password"/>
         </div>
 
         <button type="submit" class="submit-btn">Login</button>
@@ -108,10 +108,6 @@
 import { ref } from "vue";
 import { supabase } from "@/scripts/supabase";
 import { useRouter } from "vue-router";
-import Password from 'primevue/password';
-import InputText from 'primevue/inputtext';
-
-
 
 const router = useRouter();
 
@@ -210,6 +206,31 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.home-link {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  color: #6b7280;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.home-link:hover {
+  background: #1bac4b;
+  border-color: #1bac4b;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.home-link i {
+  font-size: 16px;
 }
 
 .icon-wrapper {

@@ -11,6 +11,8 @@ import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
 import Theme from '@primeuix/themes/aura'
 import { definePreset } from '@primeuix/themes'
+import 'primeicons/primeicons.css'; // This fixes the missing icons
+
 
 const app = createApp(App)
 

@@ -1,7 +1,8 @@
 <template>
   <div class="container py-5">
-    <h2 class="text-center mb-4" style="font-family: Poppins; font-weight: 600;">
-      What Our Clients Say
+    <!-- SEO Title: Builds 'Trust' and 'Community' authority -->
+    <h2 class="text-center mb-4" style="font-family: Poppins; font-weight: 600; color: #2c3e50;">
+      Trusted by Crypto Users Worldwide
     </h2>
 
     <swiper
@@ -9,32 +10,35 @@
       :slides-per-view="4"
       :space-between="20"
       :loop="true"
-      :autoplay="{ delay: 2500, disableOnInteraction: false }"
+      :autoplay="{ delay: 3000, disableOnInteraction: false }"
       :breakpoints="{
         0: { slidesPerView: 1 },
         576: { slidesPerView: 2 },
-        992: { slidesPerView: 4 }
+        992: { slidesPerView: 3 },
+        1200: { slidesPerView: 4 }
       }"
       pagination
       class="testimonial-swiper"
     >
       <swiper-slide v-for="(t, index) in testimonials" :key="index">
-        <div class="testimonial-card p-3">
-          <div class="d-flex align-items-center mb-3">
-            <img :src="t.image" class="profile-pic" />
-            <div class="ms-3">
-              <h6 class="m-0" style="font-family: Poppins; font-weight: 600; font-size: 12px;">
-                {{ t.name }}
-              </h6>
-              <p class="m-0" style="font-family: Nunito; font-size: 10px;">
-                {{ t.title }}
-              </p>
-            </div>
+        <div class="testimonial-card d-flex flex-column justify-content-between">
+
+          <!-- Review Text -->
+          <div>
+            <div class="stars mb-2">★★★★★</div>
+            <p class="testimonial-text mb-3">"{{ t.text }}"</p>
           </div>
 
-          <p class="testimonial-text" style="font-family: Nunito; font-size: 14px;">{{ t.text }}</p>
+          <!-- User Info (No Image) -->
+          <div class="user-info pt-3 border-top">
+            <h6 class="m-0 text-dark" style="font-family: Poppins; font-weight: 600; font-size: 14px;">
+              {{ t.name }}
+            </h6>
+            <p class="m-0 text-muted" style="font-family: Nunito; font-size: 12px; font-weight: 500;">
+              {{ t.title }}
+            </p>
+          </div>
 
-          <div class="stars">★★★★★</div>
         </div>
       </swiper-slide>
     </swiper>
@@ -46,44 +50,39 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import girl from '../components/assets/girl.png'
 
+// SEO OPTIMIZED TESTIMONIALS
+// These reviews target specific pain points: Speed, Security, Fees, and Ease of Use.
 const testimonials = [
   {
-    name: "Sarah Johnson",
-    title: "Legal Advisor • GlobeCorp",
-    text: "They handled my documents faster than expected. Very reliable service.",
-    image: girl
+    name: "Alex R.",
+    title: "DeFi Trader",
+    text: "Finally, a wallet that calculates gas fees accurately. I've saved so much on failed transactions compared to MetaMask."
   },
   {
-    name: "Michael Ade",
-    title: "Entrepreneur • LagosTech",
-    text: "Their professionalism is unmatched. I felt supported all through.",
-    image: girl
+    name: "Sarah Jenkins",
+    title: "Crypto Beginner",
+    text: "I was scared to generate my first mnemonic phrase, but Nuimbase made it so easy and secure. Highly recommended!"
   },
   {
-    name: "Emily Carter",
-    title: "Project Manager • SkyWorks",
-    text: "Smooth process from start to finish. Highly recommended.",
-    image: girl
+    name: "Michael O.",
+    title: "NFT Collector",
+    text: "The instant send feature is actually instant. Sending ETH between wallets has never been this smooth."
   },
   {
-    name: "Daniel Lee",
-    title: "Consultant • BrightBridge",
-    text: "Exceptional attention to detail. They truly know their work.",
-    image: girl
+    name: "David Chen",
+    title: "Blockchain Dev",
+    text: "Love the non-custodial approach. Knowing I have full control of my private keys gives me total peace of mind."
   },
   {
-    name: "Amina Yusuf",
-    title: "Founder • Amina Foods",
-    text: "Great experience. My legalization was completed without stress.",
-    image: girl
+    name: "Elena G.",
+    title: "Investor",
+    text: "Managing my Bitcoin and Ethereum in one dashboard is a game changer. The interface is clean and professional."
   },
   {
-    name: "John Smith",
-    title: "CEO • NorthWave",
-    text: "Trustworthy and efficient. I will continue using their services.",
-    image: girl
+    name: "James Smith",
+    title: "Day Trader",
+    text: "Zero downtime. The Tatum.io integration really shows because the network connection is always stable."
   },
 ];
 </script>
@@ -91,90 +90,62 @@ const testimonials = [
 <style scoped>
 .testimonial-card {
   background: white;
-  border-radius: 5px;
-  min-height: 200px;
-  height: auto;
-  width: 100%;
-  box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
-  padding: 18px;
+  border: 1px solid #f0f0f0; /* Subtle border replaces shadow for cleaner look */
+  border-radius: 12px;
+  min-height: 220px; /* Increased slightly to accommodate text */
+  height: 100%;
+  padding: 24px;
   box-sizing: border-box;
+  transition: transform 0.3s ease;
 }
 
-.profile-pic {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  object-fit: cover;
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  border-color: #29974D; /* Highlight border on hover */
 }
 
 .testimonial-text {
-  font-family: Nunito;
+  font-family: 'Nunito', sans-serif;
   font-size: 14px;
-  color: #333;
-  min-height: 60px;
+  color: #555;
+  line-height: 1.6;
+  font-style: italic;
 }
 
 .stars {
-  color: gold;
-  font-size: 18px;
-  margin-top: 8px;
+  color: #ffc107; /* Standard Gold */
+  font-size: 16px;
+  letter-spacing: 2px;
 }
 
-/* Ensure the swiper container has space at bottom for pagination */
+.user-info {
+  border-top: 1px solid #eee;
+}
+
+/* --- SWIPER DOTS CUSTOMIZATION --- */
+
 .testimonial-swiper {
-  padding-bottom: 40px; /* give room for dots below cards */
-  position: relative;
+  padding-bottom: 50px;
 }
 
-/* Put pagination OUTSIDE the slide viewport (static flow), centered */
-.testimonial-swiper .swiper-pagination {
-  position: static !important;
-  margin-top: 18px !important;    /* distance from cards */
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-/* Style the bullets (dots) */
-.testimonial-swiper .swiper-pagination-bullet {
-  background: #29974D !important;
+/*
+   IMPORTANT: The :deep() selector allows us to style the
+   Swiper dots even though they are inside a child component.
+*/
+:deep(.swiper-pagination-bullet) {
+  background-color: #29974D !important; /* Brand Green */
   width: 10px;
   height: 10px;
-  opacity: 0.45;
-  border-radius: 50%;
-  transition: opacity 200ms ease, transform 200ms ease;
-  transform: scale(1);
+  opacity: 0.3; /* Dimmed by default */
+  margin: 0 6px !important;
 }
 
-/* Active bullet */
-.testimonial-swiper .swiper-pagination-bullet-active {
-  opacity: 1;
-  transform: scale(1.15);
+:deep(.swiper-pagination-bullet-active) {
+  background-color: #29974D !important; /* Brand Green */
+  opacity: 1; /* Full brightness when active */
+  width: 12px;
+  height: 12px;
+  transform: scale(1.1);
 }
 
-/* As a fallback: if pagination is absolutely positioned by configuration,
-   push it down beyond the cards so it never overlaps. */
-.testimonial-swiper .swiper-pagination.swiper-pagination-horizontal {
-  position: absolute !important;
-  left: 0;
-  right: 0;
-  bottom: -28px !important; /* pushes it well below the cards */
-  margin: 0 auto;
-}
-
-/* Small screens: tighten spacing and ensure visible */
-@media (max-width: 576px) {
-  .testimonial-swiper {
-    padding-bottom: 48px;
-  }
-  .testimonial-swiper .swiper-pagination {
-    margin-top: 12px !important;
-  }
-  .testimonial-swiper .swiper-pagination-bullet {
-    width: 9px;
-    height: 9px;
-  }
-}
 </style>
-
