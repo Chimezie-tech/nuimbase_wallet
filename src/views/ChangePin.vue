@@ -37,8 +37,8 @@
         <div class="icon-box bg-orange-100 text-orange-600">
           <i class="pi pi-lock text-sm"></i>
         </div>
-        <div class="text-left">
-          <h4 class="font-bold text-xs text-gray-700">Change PIN</h4>
+        <div class="text-left" style="padding-top: 15px;">
+          <h4 class="text-gray-700" style="font-size: 14px; font-family: Poppins;">Change PIN</h4>
           <p class="text-[10px] text-gray-500">Update access code.</p>
         </div>
         <i class="pi pi-chevron-right text-gray-300 text-xs ml-auto"></i>
@@ -48,9 +48,9 @@
         <div class="icon-box bg-purple-100 text-purple-600">
           <i class="pi pi-eye text-sm"></i>
         </div>
-        <div class="text-left">
-          <h4 class="font-bold text-xs text-gray-700">View Keys</h4>
-          <p class="text-[10px] text-gray-500">Reveal or backup phrase.</p>
+        <div class="text-left"style="padding-top: 15px;" >
+          <h4 class="text-gray-700" style="font-size: 14px; font-family: Poppins;">View Seed Phrase</h4>
+          <p class="text-[10px] text-gray-500">Reveal your seed phrase.</p>
         </div>
         <i class="pi pi-chevron-right text-gray-300 text-xs ml-auto"></i>
       </button>
@@ -107,8 +107,8 @@
 
     <!-- STATE 4: MNEMONIC DISPLAY -->
     <div v-else-if="uiState === 'view-display'" class="text-center">
-      <div class="mb-3">
-        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">{{ viewForm.blockchain }} Keys</h3>
+      <div class="mb-2">
+        <h5 class="text-gray-700 uppercase tracking-wide mb-1" style="size: 12px;">{{ viewForm.blockchain }} Keys</h5>
         <span class="text-[9px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-100">CONFIDENTIAL</span>
       </div>
 
@@ -148,7 +148,7 @@
   <!-- CONFIRM DELETE DIALOG -->
   <Dialog v-model:visible="keys.confirmDelete" header="Delete Wallet?" modal class="compact-dialog" :style="{ width: '280px' }">
     <p class="text-xs text-gray-600 mb-4 leading-relaxed">
-      This will remove the wallet from your database.
+      This will remove the wallet from Nuimbase.
       <br>
       <strong class="text-red-500">Funds are lost if you haven't backed up the keys.</strong>
     </p>
@@ -206,7 +206,7 @@ const tokens = [
 const dialogHeader = computed(() => {
   if (uiState.value === 'change-pin') return 'Update PIN';
   if (uiState.value === 'view-auth') return 'Verify Identity';
-  if (uiState.value === 'view-display') return 'Keys';
+  if (uiState.value === 'view-display') return 'Key';
   return 'Security';
 });
 
@@ -338,7 +338,7 @@ const showToast = (msg, type) => {
 
 /* Floating Button (Compact) */
 .floating-pin-btn {
-  position: fixed; bottom: 24px; right: 24px; padding: 10px 16px;
+  position: fixed; bottom: 24px; right: 24px; padding: 20px 36px;
   background: #1bac4b; color: white; border: none; border-radius: 50px;
   cursor: pointer; box-shadow: 0 4px 12px rgba(27, 172, 75, 0.4);
   transition: all 0.3s ease; z-index: 999;
@@ -402,8 +402,8 @@ const showToast = (msg, type) => {
 
 @media (max-width: 767px) {
   .floating-pin-btn { bottom: 80px; right: 16px; }
-  .mnemonic-grid { grid-template-columns: repeat(2, 1fr); }
+  .mnemonic-grid { grid-template-columns: repeat(3, 1fr); }
   .security-watermark p { font-size: 9px; }
-  .security-watermark .warning-header { font-size: 11px; }
+  .security-watermark .warning-header { font-size: 8px; }
 }
 </style>

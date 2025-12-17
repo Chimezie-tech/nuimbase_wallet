@@ -107,9 +107,9 @@
           <div class="icon-box bg-green-100 text-green-600">
             <i class="pi pi-plus"></i>
           </div>
-          <div class="text-left">
-            <h4 class="font-bold text-sm">Generate New Wallet</h4>
-            <p class="text-xs text-gray-500">Create a fresh address with a new seed phrase.</p>
+          <div class="text-left" style="padding-top: 13px;">
+            <h5 class="text-sm" style="font-size: 14px; font-family: Poppins;">Generate New Wallet</h5>
+            <p class="text-xs text-gray-500">Generate new seed phrase.</p>
           </div>
         </button>
 
@@ -117,8 +117,8 @@
           <div class="icon-box bg-blue-100 text-blue-600">
             <i class="pi pi-download"></i>
           </div>
-          <div class="text-left">
-            <h4 class="font-bold text-sm">Import Existing Wallet</h4>
+          <div class="text-left" style="padding-top: 13px;">
+            <h4 class="text-sm" style="font-size: 14px; font-family: Poppins;">Import Existing Wallet</h4>
             <p class="text-xs text-gray-500">Restore using Mnemonic or Private Key.</p>
           </div>
         </button>
@@ -127,11 +127,11 @@
       <!-- STATE 4: CREATE WALLET FORM -->
       <form v-else-if="uiState === 'create-wallet'" @submit.prevent="handleCreateWallet" class="space-y-4">
         <div class="flex flex-col gap-2 mb-3">
-          <label class="font-bold text-sm">Verify PIN</label>
+          <label class="text-sm" style="font-size: 14px; font-family: Poppins;">Verify PIN</label>
           <InputOtp v-model="walletForm.pin" :length="6" mask integer />
         </div>
         <div class="flex flex-col gap-2 mb-4">
-          <label class="font-bold text-sm">Select Blockchain</label>
+          <label class="text-sm" style="font-size: 14px; font-family: Poppins;">Select Blockchain</label>
           <Select v-model="walletForm.blockchain" :options="tokens" option-label="label" option-value="key"
             class="w-full" />
         </div>
@@ -691,7 +691,7 @@ onMounted(() => { onStart(); });
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 0.6rem;
   font-weight: 500;
 }
 
@@ -775,7 +775,7 @@ onMounted(() => { onStart(); });
   position: fixed;
   bottom: 24px;
   right: 24px;
-  padding: 12px 24px;
+  padding: 20px 36px;
   background: #1bac4b;
   color: white;
   border: none;

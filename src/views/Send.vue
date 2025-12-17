@@ -617,7 +617,7 @@ onMounted(() => { onStart(); });
   display: flex; align-items: center; gap: 10px; border: none; background: transparent; cursor: pointer;
 }
 .fab-label {
-  background: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  background: white; padding: 10px 30px; border-radius: 4px; font-size: 12px; font-weight: 600;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: #555;
   opacity: 0; animation: fadeIn 0.2s 0.1s forwards;
 }
