@@ -144,16 +144,33 @@ const handleSubmit = async () => {
       setTimeout(() => router.push("/dashboard"), 1000);
     }
 
-    // SIGNUP
-    if (activeForm.value === "signup") {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        showToast(error.message, "error");
-        return;
-      }
+    // SIGNUP Logic Updated
+if (activeForm.value === "signup") {
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
-      showToast("Signup successful! Check your email to confirm.", "success");
+  if (error) {
+    showToast(error.message, "error");
+    return;
+  }
+
+  // MANUALLY CREATE THE CUSTOMER RECORD
+  if (data.user) {
+    const { error: customerError } = await supabase
+      .from('customers')
+      .insert([
+        {
+          uuid: data.user.id,
+          email: email,
+        }
+      ]);
+
+    if (customerError) {
+      console.error("Error creating customer record:", customerError.message);
     }
+  }
+      showToast("Signup successful! Check your email.", "success");
+      setTimeout(() => router.push("/login"), 1000);
+  }
 
     // FORGOT PASSWORD
     if (activeForm.value === "forgot") {

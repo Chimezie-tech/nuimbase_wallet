@@ -301,7 +301,7 @@ const openWalletFlow = async () => {
   sendComponent.value.openSendModal();
   sendComponent.value.stForm.to = tx.toAddress;
   sendComponent.value.stForm.amount = tx.amount;
-  sendComponent.value.stForm.selectedAssetKey = tx.blockchain; // or map symbol
+  sendComponent.value.stForm.selectedAssetKey = tx.blockchain;
 }
 
 // 2. CREATE PIN
