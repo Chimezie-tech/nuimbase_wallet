@@ -56,7 +56,7 @@
     <ul class="list-unstyled px-3">
       <li class="py-2"><a class="drawer-link" href="#contact" @click="toggleDrawer">Contact</a></li>
       <li class="py-2"><a class="drawer-link" href="#testimonial" @click="toggleDrawer">Testimonials</a></li>
-      <li class="py-2"><a class="drawer-link" href="#fag" @click="toggleDrawer">Fag</a></li>
+      <li class="py-2"><a class="drawer-link" href="#fag" @click="toggleDrawer">Faq</a></li>
       <li class="py-2"><a class="drawer-link" href="#about" @click="toggleDrawer">About</a></li>
     </ul>
   </div>
