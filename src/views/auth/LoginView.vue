@@ -1,12 +1,9 @@
 <template>
   <div class="auth-container">
-
-    <!-- Loading Spinner -->
     <div v-if="isLoading" class="spinner-overlay">
       <div class="spinner"></div>
     </div>
 
-    <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toast.show" :class="['toast', toast.type]">
         <i :class="toast.type === 'success' ? 'ri-check-line' : 'ri-error-warning-line'"></i>
@@ -15,8 +12,6 @@
     </Transition>
 
     <form @submit.prevent="handleSubmit" class="auth-box">
-
-      <!-- Header -->
       <div class="auth-header">
         <div class="auth-title-wrapper">
           <div class="icon-wrapper">
@@ -32,7 +27,7 @@
       </div>
 
       <p class="auth-text" v-if="activeForm !== 'forgot'">
-       <span style="color: #1bac4b;">Nuimbase.</span> Fast, Secured and Reliable
+        <span style="color: #1bac4b;">Nuimbase.</span> Fast, Secured and Reliable
       </p>
 
       <p class="auth-text" v-if="activeForm === 'forgot'">
@@ -41,9 +36,7 @@
 
       <div class="divider"></div>
 
-      <!-- LOGIN FORM -->
       <template v-if="activeForm === 'login'">
-
         <div class="input-group">
           <label>Email</label>
           <input v-model="form.email" type="email" class="input-field" placeholder="Your email" required />
@@ -51,7 +44,20 @@
 
         <div class="input-group">
           <label>Password</label>
-          <input v-model="form.password" type="password" class="input-field" placeholder="Your password" required />
+          <div class="password-wrapper">
+            <input
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              class="input-field"
+              placeholder="Your password"
+              required
+            />
+            <i
+              :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"
+              class="toggle-password"
+              @click="showPassword = !showPassword"
+            ></i>
+          </div>
         </div>
 
         <button type="submit" class="submit-btn">Login</button>
@@ -60,12 +66,9 @@
           <span @click="activeForm = 'signup'">Create account</span>
           <span @click="activeForm = 'forgot'">Forgot password?</span>
         </div>
-
       </template>
 
-      <!-- SIGNUP FORM -->
       <template v-if="activeForm === 'signup'">
-
         <div class="input-group">
           <label>Email</label>
           <input v-model="form.email" type="email" class="input-field" placeholder="Your email" required />
@@ -73,7 +76,20 @@
 
         <div class="input-group">
           <label>Password</label>
-          <input v-model="form.password" type="password" class="input-field" placeholder="Choose a password" required />
+          <div class="password-wrapper">
+            <input
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              class="input-field"
+              placeholder="Choose a password"
+              required
+            />
+            <i
+              :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"
+              class="toggle-password"
+              @click="showPassword = !showPassword"
+            ></i>
+          </div>
         </div>
 
         <button type="submit" class="submit-btn">Create Account</button>
@@ -81,12 +97,9 @@
         <div class="auth-links">
           <span @click="activeForm = 'login'">Already have an account?</span>
         </div>
-
       </template>
 
-      <!-- FORGOT PASSWORD FORM -->
       <template v-if="activeForm === 'forgot'">
-
         <div class="input-group">
           <label>Email</label>
           <input v-model="form.email" type="email" class="input-field" placeholder="Your email" required />
@@ -97,9 +110,7 @@
         <div class="auth-links">
           <span @click="activeForm = 'login'">Back to login</span>
         </div>
-
       </template>
-
     </form>
   </div>
 </template>
@@ -114,10 +125,12 @@ const router = useRouter();
 const activeForm = ref("login");
 const form = ref({ email: "", password: "" });
 const isLoading = ref(false);
+const showPassword = ref(false); // Eye icon toggle state
+
 const toast = ref({
   show: false,
   message: "",
-  type: "success" // "success" | "error"
+  type: "success"
 });
 
 const showToast = (message, type = "success") => {
@@ -125,6 +138,11 @@ const showToast = (message, type = "success") => {
   setTimeout(() => {
     toast.value.show = false;
   }, 3000);
+};
+
+const clearInputs = () => {
+  form.value.email = "";
+  form.value.password = "";
 };
 
 const handleSubmit = async () => {
@@ -135,6 +153,10 @@ const handleSubmit = async () => {
     // LOGIN
     if (activeForm.value === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      // Clear inputs immediately after result
+      clearInputs();
+
       if (error) {
         showToast(error.message, "error");
         return;
@@ -144,39 +166,39 @@ const handleSubmit = async () => {
       setTimeout(() => router.push("/dashboard"), 1000);
     }
 
-    // SIGNUP Logic Updated
-if (activeForm.value === "signup") {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+    // SIGNUP
+    if (activeForm.value === "signup") {
+      const { data, error } = await supabase.auth.signUp({ email, password });
 
-  if (error) {
-    showToast(error.message, "error");
-    return;
-  }
+      // Clear inputs immediately after result
+      clearInputs();
 
-  // MANUALLY CREATE THE CUSTOMER RECORD
-  if (data.user) {
-    const { error: customerError } = await supabase
-      .from('customers')
-      .insert([
-        {
-          uuid: data.user.id,
-          email: email,
-        }
-      ]);
+      if (error) {
+        showToast(error.message, "error");
+        return;
+      }
 
-    if (customerError) {
-      console.error("Error creating customer record:", customerError.message);
-    }
-  }
+      if (data.user) {
+        const { error: customerError } = await supabase
+          .from('customers')
+          .insert([{ uuid: data.user.id, email: email }]);
+
+        if (customerError) console.error("Error:", customerError.message);
+      }
+
       showToast("Signup successful! Check your email.", "success");
-      setTimeout(() => router.push("/login"), 1000);
-  }
+      // Switch back to login card
+      activeForm.value = "login";
+    }
 
     // FORGOT PASSWORD
     if (activeForm.value === "forgot") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "http://localhost:5173/reset-password",
+        redirectTo: "https://nuimbase.com/reset-password",
       });
+
+      clearInputs();
+
       if (error) {
         showToast(error.message, "error");
         return;
@@ -189,7 +211,6 @@ if (activeForm.value === "signup") {
   }
 };
 </script>
-
 
 <style scoped>
 .auth-container {
@@ -246,10 +267,6 @@ if (activeForm.value === "signup") {
   transform: translateY(-1px);
 }
 
-.home-link i {
-  font-size: 16px;
-}
-
 .icon-wrapper {
   width: 40px;
   height: 40px;
@@ -281,6 +298,31 @@ if (activeForm.value === "signup") {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+/* Password wrapper and icon styling */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .input-field {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.toggle-password:hover {
+  color: #1bac4b;
 }
 
 .input-field {
@@ -384,7 +426,6 @@ if (activeForm.value === "signup") {
   font-size: 20px;
 }
 
-/* Toast slide-in animation */
 .toast-enter-active {
   animation: slideInRight 0.3s ease-out;
 }
@@ -394,24 +435,12 @@ if (activeForm.value === "signup") {
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(400px);
-    opacity: 0;
-  }
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(400px); opacity: 0; }
 }
 </style>
