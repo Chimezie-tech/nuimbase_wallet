@@ -15,38 +15,52 @@ const router = createRouter({
       name: 'home',
       component: Home,
       meta: {
-        title: 'Nuimbase | Best Non-Custodial Multi-Chain Crypto Wallet 2025',
-        description: 'Securely manage, store, and send Bitcoin, Ethereum, and Altcoins with Nuimbase.'
+        title: 'Nuimbase | Best Non-Custodial Multi-Chain Crypto Wallet | Best crypto wallets',
+        description: 'Create a secure, non-custodial crypto wallet instantly. Nuimbase is the safest MetaMask alternative for managing Bitcoin, Ethereum, and DeFi assets with zero-fee internal transfers.'
       }
     },
     {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/auth/LoginView.vue'),
-      meta: { title: 'Secure Web3 Login | Nuimbase' }
+      meta: {
+        title: 'Secure Web3 Login | Enjoy unlimited access to free crypto wallets | Create unlimited crypto wallets | Web3, Blockchain, Swap, instant crypto transfers',
+        description: 'Log in to your Nuimbase decentralised account. Securely manage your private keys and blockchain assets with military-grade encryption.'
+      }
     },
     {
       path: '/dashboard',
       component: DashboardLayout,
-      meta: { requiresAuth: true }, // THE FRONT DOOR
+      meta: { requiresAuth: true }, // THE FRONT DOOR SECURITY
       children: [
         {
-          path: '', // Matches /dashboard
+          path: '',
           name: 'DashboardHome',
           component: CreateWallet,
-          meta: { title: 'Dashboard | Nuimbase Wallet' }
+          meta: {
+            title: 'Crypto Portfolio Tracker | Real-Time BTC & ETH Price Dashboard | Manage your crypto wallets securely | Hybrid HD crypto wallets for free',
+            description: 'Monitor your crypto portfolio in real-time. The Nuimbase dashboard provides live market analytics for Bitcoin, Ethereum, and multi-chain assets.'
+          }
         },
         {
-          path: 'send', // Matches /dashboard/send
+          path: 'send',
+          alias: '/send',
           name: 'Send',
           component: Send,
-          meta: { title: 'Send Crypto Instantly | Nuimbase' }
+          meta: {
+            title: 'Send Crypto Instantly | Zero-Fee Bitcoin & Ethereum Transfers | Send unlimited crypto | Send and receive crypto instantly',
+            description: 'Experience lightning-fast blockchain transactions. Send Bitcoin and Ethereum globally with optimized gas fees and instant confirmation on the Nuimbase network.'
+          }
         },
         {
-          path: 'change-pin', // Matches /dashboard/change-pin
-          name: 'Change pin',
+          path: 'change-pin',
+          alias: '/change-pin',
+          name: 'ChangePin',
           component: ChangePin,
-          meta: { title: 'Security Settings | Nuimbase' }
+          meta: {
+            title: 'Advanced Wallet Security | Secure Your Private Keys & Assets | How to secure your wallets | Best secured crypto wallets 2026',
+            description: 'Enhance your self-custody security. Update your encrypted PIN and manage multi-sig settings to protect your crypto from unauthorized access.'
+          }
         }
       ]
     },
@@ -54,37 +68,42 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: NotFound,
-      meta: { title: '404 Page Not Found | Nuimbase' }
+      meta: {
+        title: '404 - Page Not Found | Nuimbase Crypto Help Center',
+        description: 'The page you are looking for has moved or does not exist. Return to Nuimbase, the world\'s most secure non-custodial wallet.'
+      }
     }
-  ],
+  ]
 })
 
-// --- THE FRONT DOOR GATEKEEPER ---
+// --- THE MASTER SECURITY & SEO INJECTION GUARD ---
 router.beforeEach(async (to, from, next) => {
-  // 1. We ask the DATABASE (not the browser) if this user exists
+  // 1. DATABASE SECURITY CHECK (Blocks deleted users immediately)
   const { data: { user }, error } = await supabase.auth.getUser();
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
 
-  // 2. We check if the route being accessed is /dashboard or any of its children
-  const isDashboardRoute = to.matched.some(record => record.meta.requiresAuth);
-
-  // 3. THE KICK OUT: If they are on a dashboard route BUT user is null/deleted
-  if (isDashboardRoute && (!user || error)) {
-    console.log("Access Denied: User does not exist in database.");
-
-    // Wipe the fake session so they can't try again
+  if (requiresAuth && (!user || error)) {
+    console.warn("Auth failure: Redirecting to secure login.");
     await supabase.auth.signOut();
-
-    // Throw them out to Login immediately
     return next('/login');
   }
 
-  // 4. SEO & TITLE LOGIC (Restored for high ranking)
-  const defaultTitle = 'Nuimbase | Secure Crypto Wallet';
+  // 2. DYNAMIC SEO TITLE INJECTION
+  const defaultTitle = 'Nuimbase | Secure Multi-Chain Web3 Wallet';
   document.title = to.meta.title || defaultTitle;
 
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc && to.meta.description) {
-    metaDesc.setAttribute('content', to.meta.description);
+  // 3. DYNAMIC SEO META DESCRIPTION INJECTION
+  const defaultDesc = 'Nuimbase is a non-custodial crypto wallet designed for total security and ease of use. Manage BTC, ETH, and more.';
+  const descriptionContent = to.meta.description || defaultDesc;
+
+  let metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) {
+    metaDesc.setAttribute('content', descriptionContent);
+  } else {
+    const meta = document.createElement('meta');
+    meta.name = "description";
+    meta.content = descriptionContent;
+    document.head.appendChild(meta);
   }
 
   next();
