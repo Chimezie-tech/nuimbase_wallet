@@ -8,7 +8,7 @@ const isSubmitting = ref(false);
 const showSuccess = ref(false);
 
 const form = ref({
-  full_name: '',
+  fullName: '',
   email: '',
   message: ''
 });
@@ -18,7 +18,7 @@ const toggleChat = () => {
   // Reset form state on reopen
   if (isOpen.value && showSuccess.value) {
     showSuccess.value = false;
-    form.value = { full_name: '', email: '', message: '' };
+    form.value = { fullName: '', email: '', message: '' };
   }
 };
 
@@ -30,7 +30,7 @@ const submitForm = async () => {
   isSubmitting.value = true;
   try {
     const { error } = await supabase.from('customerCare').insert([{
-      full_name: form.value.full_name,
+      fullName: form.value.fullName,
       email: form.value.email,
       message: form.value.message
     }]);
@@ -87,7 +87,7 @@ const submitForm = async () => {
             </p>
 
             <div class="mb-2">
-              <input v-model="form.full_name" type="text" class="form-control compact-input" placeholder="Your Name">
+              <input v-model="form.fullName" type="text" class="form-control compact-input" placeholder="Your Name">
             </div>
 
             <div class="mb-2">
