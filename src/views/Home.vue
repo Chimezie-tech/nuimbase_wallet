@@ -7,6 +7,10 @@
   <div class="m-4">
     <Header />
   </div>
+   <main>
+    <SupportedChainsCarousel />
+    <SecurityFeatures />
+  </main>
 
   <!-- About section (Body1) -->
   <section id="about">
@@ -39,6 +43,9 @@
       <Testimonies />
     </div>
   </section>
+  <section>
+      <ComparisonSection />
+  </section>
 
   <!-- FAQ Section (Renamed from 'Fag' for Professionalism) -->
   <section id="faq">
@@ -64,6 +71,9 @@ import Body1 from '@/components/Body1.vue';
 import JobsDone from '@/components/JobsDone.vue';
 import Testimonies from '@/components/Testimonies.vue';
 import Contact from '@/components/Contact.vue';
+import SupportedChainsCarousel from '../components/SupportedChainsCarousel.vue';
+import SecurityFeatures from '../components/SecurityFeatures.vue'
+import ComparisonSection from '@/components/ComparisonSection.vue';
 // Ideally, rename this component file to 'Faq.vue' in your folder later
 import Fag from '@/components/Fag.vue';
 import Nav from '@/components/Nav.vue';

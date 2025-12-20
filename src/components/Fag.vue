@@ -1,88 +1,76 @@
 <script setup>
 import { ref } from 'vue';
 
-// 1. STATE MANAGEMENT
-// We track which FAQ is currently open. null = all closed.
 const openIndex = ref(null);
 
-// 2. TOGGLE FUNCTION
-// If clicking the same one, close it. Otherwise, open the new one.
 const toggleFaq = (index) => {
-  if (openIndex.value === index) {
-    openIndex.value = null;
-  } else {
-    openIndex.value = index;
-  }
+  openIndex.value = openIndex.value === index ? null : index;
 };
 
-// 3. SEO DATA (Kept your high-ranking keywords)
+// Expanded detailed FAQs to build high user trust
 const faqs = [
   {
     question: "Is Nuimbase a secure, non-custodial wallet?",
-    answer: "Yes. Nuimbase is 100% non-custodial. This means we do not have access to your funds. When you create a wallet, you generate a 12/24-word mnemonic phrase. Only you hold the private keys to your assets."
+    answer: "Absolutely. Nuimbase is architected as a strictly non-custodial environment. We do not store your private keys on any server. Upon registration, you generate a military-grade 12/24-word mnemonic phrase. This ensures that you, and only you, have sovereign control over your digital wealth."
   },
   {
-    question: "Are there any hidden fees for sending crypto?",
-    answer: "Nuimbase is free to use. We do not charge subscription fees. When you send crypto, you only pay the Network Gas Fee required by the blockchain miners. Our smart algorithm ensures you get the lowest gas price."
+    question: "How does the Tatum.io infrastructure benefit me?",
+    answer: "By utilizing Tatum.io’s enterprise-grade infrastructure, Nuimbase offers 99.9% network uptime and real-time blockchain synchronization. This partnership allows us to provide institutional-grade reliability, ensuring your balances are always accurate and your transactions are broadcasted to the blockchain without delay."
   },
   {
-    question: "What happens if I lose my phone or forget my PIN?",
-    answer: "As long as you have your Secret Recovery Phrase (the 12/24 words you got when signing up), you can restore your wallet on any device using the 'Import Wallet' feature."
+    question: "Are there any hidden service fees?",
+    answer: "No. Nuimbase is committed to financial transparency. We do not charge subscription or platform usage fees. The only cost incurred is the Network Gas Fee, which goes directly to blockchain miners. Our smart algorithm calculates the most efficient gas price in real-time to prevent you from overpaying."
   },
   {
-    question: "Which cryptocurrencies can I store and send?",
-    answer: "We support a multi-chain environment including Bitcoin (BTC), Ethereum (ETH), and other major networks. Powered by Tatum.io infrastructure, we are constantly adding support for Web3 assets."
+    question: "What happens if I lose my device or forget my PIN?",
+    answer: "Because Nuimbase is non-custodial, your assets are tied to your Secret Recovery Phrase, not your device. As long as you have your 12/24-word phrase safely stored offline, you can instantly restore your entire portfolio on any new device using our 'Import Wallet' protocol."
   },
   {
-    question: "How long do transactions take to complete?",
-    answer: "Most transactions are near-instant. However, speed depends on blockchain network congestion. We optimize gas fees to ensure your transactions are prioritized for fast confirmation."
+    question: "How does Nuimbase ensure fast transaction speeds?",
+    answer: "Speed is a priority. We use a Dynamic Fee Engine that monitors mempool congestion across Bitcoin, Ethereum, and other networks. By suggesting the optimal gas price for 'Instant' priority, we ensure your transactions are picked up by the next available block for near-instant settlement."
+  },
+  {
+    question: "Which assets can I manage within Nuimbase?",
+    answer: "We support a robust multi-chain ecosystem including Bitcoin (BTC), Ethereum (ETH), and various Web3 tokens. Our infrastructure is designed for the future of DeFi, allowing you to monitor, send, and receive diverse assets from one unified, secure dashboard."
   }
 ];
 </script>
 
 <template>
-  <div class="d-flex justify-content-center align-items-center mb-5">
-    <div class="container m-4" style="max-width: 800px; padding-top: 10px;">
+  <div class="container my-5 py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-12">
 
-      <!-- HEADER -->
-      <div class="text-center mb-4">
-        <h2 style="font-family: Poppins; font-weight: 700; color: #2c3e50;">
-          Frequently Asked Questions
-        </h2>
-        <p class="text-muted" style="font-family: Nunito;">
-          Everything you need to know about security, fees, and managing your assets.
-        </p>
-      </div>
+        <div class="text-center mb-5">
+          <h2 class="brand-title">Frequently Asked Questions</h2>
+          <p class="brand-subtitle mx-auto">
+            Everything you need to know about our non-custodial security, optimized fees, and enterprise-grade infrastructure.
+          </p>
+        </div>
 
-      <!-- VUE ACCORDION (No Bootstrap JS) -->
-      <div class="accordion-list">
-
-        <div
-          v-for="(item, index) in faqs"
-          :key="index"
-          class="custom-accordion-item mb-3 shadow-sm"
-        >
-          <!-- BUTTON -->
-          <button
-            @click="toggleFaq(index)"
-            class="accordion-btn d-flex justify-content-between align-items-center w-100"
-            :class="{ 'active': openIndex === index }"
+        <div class="accordion-container">
+          <div
+            v-for="(item, index) in faqs"
+            :key="index"
+            class="custom-accordion-item mb-2"
           >
-            <span style="text-align: left;">{{ item.question }}</span>
+            <button
+              @click="toggleFaq(index)"
+              class="accordion-btn d-flex justify-content-between align-items-center w-100"
+              :class="{ 'active': openIndex === index }"
+            >
+              <span class="faq-question">{{ item.question }}</span>
+              <i class="bi bi-chevron-right transition-icon" :class="{ 'rotate': openIndex === index }"></i>
+            </button>
 
-            <!-- Simple CSS Arrow that rotates -->
-            <i class="bi bi-chevron-down transition-icon" :class="{ 'rotate': openIndex === index }"></i>
-          </button>
-
-          <!-- CONTENT (Animated via CSS) -->
-          <div class="accordion-content" :class="{ 'is-open': openIndex === index }">
-            <div class="p-3">
-              <p class="m-0" style="font-family: Nunito; font-size: 14px; color: #555; line-height: 1.6;">
-                {{ item.answer }}
-              </p>
+            <div class="accordion-content" :class="{ 'is-open': openIndex === index }">
+              <div class="p-4 pt-0">
+                <p class="faq-answer">
+                  {{ item.answer }}
+                </p>
+              </div>
             </div>
           </div>
-
         </div>
 
       </div>
@@ -91,64 +79,106 @@ const faqs = [
 </template>
 
 <style scoped>
-/* 1. CONTAINER STYLING */
-.custom-accordion-item {
-  border: 1px solid #e9ecef;
-  background-color: #fff;
-  border-radius: 12px;
-  overflow: hidden; /* Important for the sliding animation */
+/* BRAND COLOR: #1bac4b | RADIUS: 4px | NO SHADOWS */
+
+.brand-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 2.2rem;
 }
 
-/* 2. BUTTON STYLING */
+.brand-subtitle {
+  font-family: 'Nunito', sans-serif;
+  color: #6c757d;
+  max-width: 700px;
+}
+
+.accordion-container {
+  width: 100%;
+}
+
+.custom-accordion-item {
+  border: 1px solid #eee; /* Flat design */
+  background-color: #fff;
+  border-radius: 4px; /* STRICT 4PX */
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.custom-accordion-item:hover {
+  border-color: #1bac4b;
+}
+
+/* BUTTON STYLING */
 .accordion-btn {
   background: #fff;
   border: none;
-  padding: 18px 24px;
+  padding: 22px 28px;
   font-family: 'Poppins', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-/* Active State (When Open) */
-.accordion-btn.active {
-  background-color: #E8F7ED;
-  color: #29974D;
+  font-size: 16px;
   font-weight: 600;
-  box-shadow: inset 4px 0 0 #29974D; /* Green line on left */
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* 3. CONTENT ANIMATION (The "No Glitch" Magic) */
+/* Active State Colors locked to #1bac4b */
+.accordion-btn.active {
+  color: #1bac4b;
+}
+
+.faq-question {
+  text-align: left;
+  padding-right: 15px;
+}
+
+/* CONTENT ANIMATION */
 .accordion-content {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.4s ease-out, opacity 0.4s ease-out;
-  background-color: #fff;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
-/* When the class 'is-open' is added by Vue, these styles apply */
 .accordion-content.is-open {
-  max-height: 200px; /* Enough height to fit text, but limits animation range */
+  max-height: 300px; /* Sufficient for detailed text */
   opacity: 1;
 }
 
-/* 4. ICON ROTATION */
-.transition-icon {
-  transition: transform 0.3s ease;
-  font-size: 12px;
-}
-.rotate {
-  transform: rotate(180deg);
+.faq-answer {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  color: #555;
+  line-height: 1.8;
+  margin: 0;
 }
 
-/* Responsive fix for very small screens */
+/* ICON STYLING */
+.transition-icon {
+  transition: transform 0.3s ease;
+  font-size: 14px;
+  color: #1bac4b; /* Brand color icons */
+}
+
+.rotate {
+  transform: rotate(90deg);
+}
+
+/* Desktop Width Enforcement */
+@media (min-width: 992px) {
+  .accordion-container {
+    max-width: 100%; /* Spans full column width */
+  }
+}
+
 @media (max-width: 576px) {
   .accordion-btn {
     font-size: 14px;
-    padding: 15px 15px;
+    padding: 18px 20px;
+  }
+  .brand-title {
+    font-size: 1.75rem;
   }
 }
 </style>
