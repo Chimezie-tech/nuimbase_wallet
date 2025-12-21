@@ -266,7 +266,6 @@ async getUTXOs(chain, address, amountBtc = 0) {
       }) : [];
 
   } catch (e) {
-    console.error('UTXO fetch error:', e.message);
     return [];
   }
 },
