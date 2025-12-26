@@ -186,7 +186,7 @@ const handleSubmit = async () => {
         if (customerError) console.error("Error:", customerError.message);
       }
 
-      showToast("Signup successful! Check your email.", "success");
+      showToast("Signup successful! you can now login.", "success");
       // Switch back to login card
       activeForm.value = "login";
     }
