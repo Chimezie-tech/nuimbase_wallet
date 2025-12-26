@@ -214,6 +214,8 @@ import { onMounted, reactive, ref, computed } from 'vue';
 import { Button, Dialog, InputOtp, Select, Textarea } from 'primevue';
 import { $POST, $GET } from '@/scripts/utils';
 import MarketTabs from '@/components/MarketTabs.vue';
+import { supabase } from '@/scripts/supabase'; // Ensure supabase is imported
+
 
 // --- STATE MANAGEMENT ---
 const wallets = ref([]);
@@ -330,15 +332,53 @@ const handleCreatePin = async () => {
   }
 };
 
+// ✅ HELPER: Check if wallet exists for the blockchain
+const checkWalletExists = async (blockchain) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+      .from('customerWallets')
+      .select('id') // We only need to know if a row exists
+      .eq('uuid', user.id)
+      .eq('blockchain', blockchain)
+      .limit(1);
+
+    // Return true if we found a wallet, false otherwise
+    return data && data.length > 0;
+  } catch (error) {
+    console.error('Check Wallet Error:', error);
+    return false; // Fail safe: assume it doesn't exist if DB check fails
+  }
+};
+
 // 3. CREATE WALLET
 const handleCreateWallet = async () => {
+  // 1. Validate PIN
   if (walletForm.value.pin.length !== 6) {
     showDialog('Error', 'Invalid PIN', 'pi pi-times-circle', 'red');
     return;
   }
 
   isSubmitting.value = true;
+
   try {
+    // 2. 🛑 CHECK DUPLICATE (New Logic)
+    // Assuming walletForm.value.blockchain holds the selected chain
+    const exists = await checkWalletExists(walletForm.value.blockchain);
+
+    if (exists) {
+      showDialog(
+        'Action Denied',
+        `You already have a ${walletForm.value.blockchain} wallet. Nuimbase supports only one wallet per blockchain.`,
+        'pi pi-ban',
+        'red'
+      );
+      return; // Stop execution
+    }
+
+    // 3. Proceed if no duplicate found
     const res = await $POST(walletForm.value, 'wallet/create');
 
     if (res.success) {
@@ -358,6 +398,7 @@ const handleCreateWallet = async () => {
 
 // 4. IMPORT WALLET
 const handleImportWallet = async () => {
+  // 1. Validate Input
   if (importForm.value.pin.length !== 6) {
     showDialog('Error', 'Invalid PIN', 'pi pi-times-circle', 'red');
     return;
@@ -368,7 +409,22 @@ const handleImportWallet = async () => {
   }
 
   isImporting.value = true;
+
   try {
+    // 2. 🛑 CHECK DUPLICATE (New Logic)
+    const exists = await checkWalletExists(importForm.value.blockchain);
+
+    if (exists) {
+      showDialog(
+        'Action Denied',
+        `You already have a ${importForm.value.blockchain} wallet imported.`,
+        'pi pi-ban',
+        'red'
+      );
+      return; // Stop execution
+    }
+
+    // 3. Proceed if no duplicate found
     const payload = {
       pin: importForm.value.pin,
       blockchain: importForm.value.blockchain,
