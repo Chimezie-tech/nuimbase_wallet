@@ -1,10 +1,6 @@
 <template>
   <!-- Floating Security Button -->
-  <button
-    class="floating-pin-btn"
-    @click="openSecurityModal"
-    aria-label="Security Settings"
-  >
+  <button class="floating-pin-btn" @click="openSecurityModal" aria-label="Security Settings">
     <i class="pi pi-shield"></i>
     <span>Security</span>
   </button>
@@ -19,20 +15,14 @@
   </div>
 
   <!-- MAIN SECURITY DIALOG (COMPACT) -->
-  <Dialog
-    v-model:visible="keys.modalPin"
-    :header="dialogHeader"
-    modal
-    class="compact-dialog"
-    :style="{ width: '310px' }"
-    :pt="{
+  <Dialog v-model:visible="keys.modalPin" :header="dialogHeader" modal class="compact-dialog"
+    :style="{ width: '310px' }" :pt="{
       header: { class: '!py-2 !px-4' },
       content: { class: '!p-4' }
-    }"
-  >
+    }">
     <!-- STATE 0: LOADING -->
     <div v-if="isLoading && uiState === 'checking'" class="flex justify-center py-6">
-       <i class="pi pi-spin pi-spinner text-green-500 text-2xl"></i>
+      <i class="pi pi-spin pi-spinner text-green-500 text-2xl"></i>
     </div>
 
     <!-- STATE 1: MISSING COUNTRY (NEW INTERVENTION) -->
@@ -49,12 +39,8 @@
         <CountrySelector v-model="countryForm.selected" :error="countryForm.error" />
       </div>
 
-      <Button
-        label="Save & Continue"
-        class="w-full !py-1 !text-xs btn-brand mt-2"
-        :loading="isSavingCountry"
-        @click="saveCountry"
-      />
+      <Button label="Save & Continue" class="w-full !py-1 !text-xs btn-brand mt-2" :loading="isSavingCountry"
+        @click="saveCountry" />
     </div>
 
     <!-- STATE 2: MENU SELECTION -->
@@ -95,8 +81,10 @@
       </div>
 
       <div class="flex gap-2 mt-2">
-        <Button type="button" label="Back" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs" @click="uiState = 'menu'" />
-        <Button type="submit" label="Update" severity="warning" size="small" class="flex-1 !py-1 !text-xs" :loading="isLoading" />
+        <Button type="button" label="Back" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs"
+          @click="uiState = 'menu'" />
+        <Button type="submit" label="Update" severity="warning" size="small" class="flex-1 !py-1 !text-xs"
+          :loading="isLoading" />
       </div>
     </form>
 
@@ -111,13 +99,8 @@
 
       <div class="flex flex-col gap-1">
         <label class="text-[10px] font-bold text-gray-500 uppercase">Wallet</label>
-        <Select
-          v-model="viewForm.blockchain"
-          :options="tokens"
-          option-label="label"
-          option-value="key"
-          class="w-full compact-select"
-        />
+        <Select v-model="viewForm.blockchain" :options="tokens" option-label="label" option-value="key"
+          class="w-full compact-select" />
       </div>
 
       <div class="flex flex-col gap-1 items-center">
@@ -126,8 +109,10 @@
       </div>
 
       <div class="flex gap-2 mt-2">
-        <Button type="button" label="Back" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs" @click="uiState = 'menu'" />
-        <Button type="submit" label="Reveal" severity="danger" size="small" class="flex-1 !py-1 !text-xs" :loading="isLoading" />
+        <Button type="button" label="Back" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs"
+          @click="uiState = 'menu'" />
+        <Button type="submit" label="Reveal" severity="danger" size="small" class="flex-1 !py-1 !text-xs"
+          :loading="isLoading" />
       </div>
     </form>
 
@@ -135,7 +120,8 @@
     <div v-else-if="uiState === 'view-display'" class="text-center">
       <div class="mb-2">
         <h5 class="text-gray-700 uppercase tracking-wide mb-1" style="size: 12px;">{{ viewForm.blockchain }} Keys</h5>
-        <span class="text-[9px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-100">CONFIDENTIAL</span>
+        <span
+          class="text-[9px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-100">CONFIDENTIAL</span>
       </div>
 
       <!-- Printable Area -->
@@ -151,19 +137,14 @@
       <!-- Action Buttons -->
       <div class="flex flex-col gap-2 mt-3">
         <div class="flex gap-2">
-          <Button label="Copy" icon="pi pi-copy" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs" @click="copyMnemonic" />
-          <Button label="Print" icon="pi pi-print" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs" @click="printMnemonic" />
+          <Button label="Copy" icon="pi pi-copy" severity="secondary" size="small" outlined
+            class="flex-1 !py-1 !text-xs" @click="copyMnemonic" />
+          <Button label="Print" icon="pi pi-print" severity="secondary" size="small" outlined
+            class="flex-1 !py-1 !text-xs" @click="printMnemonic" />
         </div>
 
-        <Button
-          label="Delete Wallet"
-          icon="pi pi-trash"
-          severity="danger"
-          text
-          size="small"
-          class="w-full !py-1 !text-xs"
-          @click="confirmDelete"
-        />
+        <Button label="Delete Wallet" icon="pi pi-trash" severity="danger" text size="small"
+          class="w-full !py-1 !text-xs" @click="confirmDelete" />
 
         <Button label="Close" severity="contrast" size="small" class="w-full !py-1 !text-xs" @click="resetAndClose" />
       </div>
@@ -172,15 +153,18 @@
   </Dialog>
 
   <!-- CONFIRM DELETE DIALOG -->
-  <Dialog v-model:visible="keys.confirmDelete" header="Delete Wallet?" modal class="compact-dialog" :style="{ width: '280px' }">
+  <Dialog v-model:visible="keys.confirmDelete" header="Delete Wallet?" modal class="compact-dialog"
+    :style="{ width: '280px' }">
     <p class="text-xs text-gray-600 mb-4 leading-relaxed">
       This will remove the wallet from Nuimbase.
       <br>
       <strong class="text-red-500">Funds are lost if you haven't backed up the keys.</strong>
     </p>
     <div class="flex justify-end gap-2">
-      <Button label="Cancel" severity="secondary" text size="small" class="!text-xs" @click="keys.confirmDelete = false" />
-      <Button label="Delete" severity="danger" size="small" class="!text-xs" :loading="isDeleting" @click="onDeleteWallet" />
+      <Button label="Cancel" severity="secondary" text size="small" class="!text-xs"
+        @click="keys.confirmDelete = false" />
+      <Button label="Delete" severity="danger" size="small" class="!text-xs" :loading="isDeleting"
+        @click="onDeleteWallet" />
     </div>
   </Dialog>
 
@@ -221,16 +205,16 @@ const currentUserUuid = ref(null);
 const tokens = [
   { key: 'BTC', label: 'Bitcoin (BTC)' },
   { key: 'ETH', label: 'Ethereum (ETH)' },
-  { key: 'BSC', label: 'Binance (BSC)'},
-  { key: 'SOL', label: 'Solana (SOL)'},
-  { key: 'TRON', label: 'Tron (TRX)'},
-  { key: 'LTC', label: 'Litecoin (LTC)'},
-  { key: 'CELO', label: 'Celo (CELO)'},
-  { key: 'ONE', label: 'Harmony (ONE)'},
-  { key: 'XDC', label: 'XDC (XDC)'},
-  { key: 'KLAYTN', label: 'Klaytn (KLAY)'},
-  { key: 'ALGO', label: 'Algorand (ALGO)'},
-  { key: 'KCS', label: 'KuCoin (KCS)'},
+  { key: 'BSC', label: 'Binance (BSC)' },
+  { key: 'SOL', label: 'Solana (SOL)' },
+  { key: 'TRON', label: 'Tron (TRX)' },
+  { key: 'LTC', label: 'Litecoin (LTC)' },
+  { key: 'CELO', label: 'Celo (CELO)' },
+  { key: 'ONE', label: 'Harmony (ONE)' },
+  { key: 'XDC', label: 'XDC (XDC)' },
+  { key: 'KLAYTN', label: 'Klaytn (KLAY)' },
+  { key: 'ALGO', label: 'Algorand (ALGO)' },
+  { key: 'KCS', label: 'KuCoin (KCS)' },
 ];
 
 // --- COMPUTED ---
@@ -274,7 +258,7 @@ const openSecurityModal = async () => {
       .single();
 
     if (error && error.code !== 'PGRST116') { // Ignore row not found for now
-       console.error(error);
+      console.error(error);
     }
 
     // 3. Decide UI State
@@ -384,20 +368,44 @@ const confirmDelete = () => { keys.confirmDelete = true; };
 const onDeleteWallet = async () => {
   isDeleting.value = true;
   try {
-    const payload = {
-      pin: viewForm.value.pin,
-      blockchain: viewForm.value.blockchain
-    };
-    const res = await $POST(payload, 'wallet/delete');
-    if (res.success || res.message) {
-      showToast('Deleted', 'success');
-      keys.confirmDelete = false;
-      keys.modalPin = false;
-    } else {
-      showToast(res.error || 'Delete failed', 'error');
+    // 1. Verify User Session
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      showToast('Session expired. Please log in.', 'error');
+      return;
     }
+
+    // 2. Perform Delete with Count Check
+    // We use { count: 'exact' } to know if a row was actually touched
+    const { error, count } = await supabase
+      .from('customerWallets')
+      .delete({ count: 'exact' })
+      .eq('uuid', user.id)
+      .eq('blockchain', viewForm.value.blockchain);
+
+    if (error) {
+      throw error;
+    }
+
+    // 3. Check if anything was actually deleted
+    if (count === 0) {
+      throw new Error("Wallet not found or permission denied.");
+    }
+
+    showToast('Wallet deleted successfully', 'success');
+
+    // 4. Reset UI
+    keys.confirmDelete = false;
+    keys.modalPin = false;
+
+    // Refresh your wallet list here if needed
+    // onStart();
+
   } catch (e) {
-    showToast('Error', 'error');
+    console.error(e);
+    // Show the actual error message if we caught our custom error
+    showToast(e.message || 'Delete failed', 'error');
   } finally {
     isDeleting.value = false;
   }
@@ -423,63 +431,157 @@ onMounted(() => {
 <style scoped>
 /* Security Watermark (Compact Font) */
 .security-watermark {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 90%; max-width: 600px; text-align: center;
-  z-index: 0; pointer-events: none; user-select: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
 }
+
 .security-watermark p {
-  color: #9ca3af; opacity: 0.5; font-size: 11px; line-height: 1.5;
-  font-weight: 600; text-transform: uppercase; margin: 0;
-  font-family: 'Courier New', Courier, monospace; letter-spacing: 0.5px;
+  color: #9ca3af;
+  opacity: 0.5;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.5px;
 }
+
 .security-watermark .warning-header {
-  color: #ef4444; display: block; margin-bottom: 4px;
-  font-size: 12px; font-weight: 800; opacity: 0.6;
+  color: #ef4444;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.6;
 }
 
 /* Floating Button (Compact) */
 .floating-pin-btn {
-  position: fixed; bottom: 24px; right: 24px; padding: 20px 36px;
-  background: #1bac4b; color: white; border: none; border-radius: 50px;
-  cursor: pointer; box-shadow: 0 4px 12px rgba(27, 172, 75, 0.4);
-  transition: all 0.3s ease; z-index: 999;
-  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 20px 36px;
+  background: #1bac4b;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(27, 172, 75, 0.4);
+  transition: all 0.3s ease;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
-.floating-pin-btn i { font-size: 14px; }
-.floating-pin-btn:hover { background: #159a43; transform: translateY(-2px); }
-.floating-pin-btn:active { transform: translateY(0); }
+
+.floating-pin-btn i {
+  font-size: 14px;
+}
+
+.floating-pin-btn:hover {
+  background: #159a43;
+  transform: translateY(-2px);
+}
+
+.floating-pin-btn:active {
+  transform: translateY(0);
+}
 
 /* Selection Cards (Compact) */
 .selection-card {
-  display: flex; align-items: center; gap: 10px;
-  background: #fff; border: 1px solid #f3f4f6; border-radius: 8px;
-  padding: 10px; cursor: pointer; transition: all 0.2s ease; width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
 }
-.selection-card:hover { border-color: #1bac4b; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-.icon-box { width: 32px; height: 32px; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
+
+.selection-card:hover {
+  border-color: #1bac4b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 /* Mnemonic Grid (Compact) */
 .mnemonic-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-  background: #f9fafb; padding: 10px; border-radius: 8px; border: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: #f9fafb;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
   margin-bottom: 10px;
 }
+
 .word-chip {
-  background: #fff; border: 1px solid #e5e7eb; border-radius: 4px;
-  padding: 3px 4px; display: flex; align-items: center; gap: 4px; font-size: 0.7rem; justify-content: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 3px 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  justify-content: center;
 }
-.word-index { color: #9ca3af; font-size: 0.65rem; user-select: none; }
-.word-text { font-weight: 600; color: #374151; font-family: monospace; }
+
+.word-index {
+  color: #9ca3af;
+  font-size: 0.65rem;
+  user-select: none;
+}
+
+.word-text {
+  font-weight: 600;
+  color: #374151;
+  font-family: monospace;
+}
 
 /* --------------------------------- */
 /* COMPACT UI OVERRIDES              */
 /* --------------------------------- */
-.compact-dialog :deep(.p-dialog-header) { padding: 10px 15px !important; }
-.compact-dialog :deep(.p-dialog-content) { padding: 0 15px 15px 15px !important; }
+.compact-dialog :deep(.p-dialog-header) {
+  padding: 10px 15px !important;
+}
+
+.compact-dialog :deep(.p-dialog-content) {
+  padding: 0 15px 15px 15px !important;
+}
 
 /* Compact Select */
-.compact-select :deep(.p-select-label) { padding: 0.4rem; font-size: 0.75rem; }
-.compact-select :deep(.p-select-dropdown) { width: 2rem; }
+.compact-select :deep(.p-select-label) {
+  padding: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.compact-select :deep(.p-select-dropdown) {
+  width: 2rem;
+}
 
 /* Compact OTP - Critical for reducing width */
 .compact-otp :deep(.p-inputotp-input) {
@@ -491,13 +593,30 @@ onMounted(() => {
 
 /* Toast */
 .toast {
-  position: fixed; top: 16px; right: 16px; padding: 8px 16px;
-  border-radius: 6px; display: flex; align-items: center; gap: 8px;
-  font-size: 0.8rem; font-weight: 600; z-index: 11000;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15); animation: slideIn 0.3s;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 11000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s;
 }
-.toast.success { background: #1bac4b; color: white; }
-.toast.error { background: #ef4444; color: white; }
+
+.toast.success {
+  background: #1bac4b;
+  color: white;
+}
+
+.toast.error {
+  background: #ef4444;
+  color: white;
+}
 
 /* BRAND BUTTON */
 .btn-brand {
@@ -506,16 +625,39 @@ onMounted(() => {
   color: white !important;
   border-radius: 4px !important;
 }
+
 .btn-brand:hover {
   background-color: #16933f !important;
 }
 
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 
 @media (max-width: 767px) {
-  .floating-pin-btn { bottom: 80px; right: 16px; }
-  .mnemonic-grid { grid-template-columns: repeat(3, 1fr); }
-  .security-watermark p { font-size: 9px; }
-  .security-watermark .warning-header { font-size: 8px; }
+  .floating-pin-btn {
+    bottom: 80px;
+    right: 16px;
+  }
+
+  .mnemonic-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .security-watermark p {
+    font-size: 9px;
+  }
+
+  .security-watermark .warning-header {
+    font-size: 8px;
+  }
 }
 </style>

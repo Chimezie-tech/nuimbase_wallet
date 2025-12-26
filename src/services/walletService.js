@@ -28,7 +28,7 @@ const getChainId = (chain) => {
   return map[chain] || 1
 }
 
-// ✅ FIXED PLATFORM ADDRESSES
+// ✅ PLATFORM ADDRESSES
 const PLATFORM_ADDRESSES = {
   ETH: '0xb1d2f548b1569556EB405934B92b0c42a6bEE73e',
   BTC: '3LQWg1QjEXvQWttCnCxLQzWaiV9rRvCfnC', // Mainnet
