@@ -157,55 +157,57 @@
       </form>
     </Dialog>
 
+    <!-- UPDATED RESULT DIALOG: Responsive, Medium Size, Flexible -->
     <Dialog
       v-model:visible="keys.modalResult"
       modal
       class="compact-dialog result-dialog"
-      :style="{ width: '340px' }"
+      :style="{ width: '500px', maxWidth: '90vw' }"
+      :breakpoints="{ '960px': '75vw', '641px': '95vw' }"
       :closable="false"
       :pt="{
         header: { class: '!hidden' },
         content: { class: '!p-0' }
       }"
     >
-      <div id="receipt-content" class="p-5 text-center">
-        <div v-if="txResult.success" class="result-icon-box success-bg mx-auto">
-          <i class="pi pi-check text-2xl" style="color: #1bac4b"></i>
+      <div id="receipt-content" class="p-6 text-center">
+        <div v-if="txResult.success" class="result-icon-box success-bg mx-auto mb-4">
+          <i class="pi pi-check text-3xl" style="color: #1bac4b"></i>
         </div>
-        <div v-else class="result-icon-box error-bg mx-auto">
-          <i class="pi pi-times text-2xl text-red-500"></i>
+        <div v-else class="result-icon-box error-bg mx-auto mb-4">
+          <i class="pi pi-times text-3xl text-red-500"></i>
         </div>
 
-        <h3 class="mt-4 text-lg" :class="txResult.success ? 'text-gray-800' : 'text-red-600'">
+        <h3 class="text-xl font-bold" :class="txResult.success ? 'text-gray-800' : 'text-red-600'">
           {{ txResult.success ? 'Transfer Successful' : 'Transfer Failed' }}
         </h3>
 
-        <p v-if="!txResult.success" class="text-xs text-gray-500 mt-2 px-2">{{ txResult.errorMessage }}</p>
+        <p v-if="!txResult.success" class="text-sm text-gray-500 mt-2 px-2">{{ txResult.errorMessage }}</p>
 
-        <div v-if="txResult.success" class="mt-5 text-left bg-gray-50 p-3 rounded border border-gray-100">
-          <div class="result-row">
-            <span>Amount</span>
-            <strong>{{ txResult.amount }} {{ txResult.blockchain }}</strong>
+        <div v-if="txResult.success" class="mt-6 text-left bg-gray-50 p-4 rounded-lg border border-gray-100">
+          <div class="result-row py-2">
+            <span class="text-xs text-gray-500">Amount</span>
+            <strong class="text-sm text-gray-800">{{ txResult.amount }} {{ txResult.blockchain }}</strong>
           </div>
-          <div class="result-row">
-            <span>Recipient</span>
-            <strong class="text-truncate">{{ txResult.toAddress }}</strong>
+          <div class="result-row py-2">
+            <span class="text-xs text-gray-500">Recipient</span>
+            <strong class="text-sm text-gray-800 text-truncate">{{ txResult.toAddress }}</strong>
           </div>
-          <div class="result-row border-0">
-            <span>TX Hash</span>
-            <div class="flex items-center gap-1">
-              <span class="text-truncate font-mono" style="font-size: 9px; max-width: 100px;">{{ txResult.txHash }}</span>
-              <i class="pi pi-copy text-[10px] cursor-pointer text-brand" @click="copyText(txResult.txHash)"></i>
+          <div class="result-row border-0 py-2">
+            <span class="text-xs text-gray-500">TX Hash</span>
+            <div class="flex items-center gap-2">
+              <span class="text-truncate font-mono text-xs" style="max-width: 140px;">{{ txResult.txHash }}</span>
+              <i class="pi pi-copy text-xs cursor-pointer text-brand hover:text-green-700" @click="copyText(txResult.txHash)"></i>
             </div>
           </div>
         </div>
 
-        <div class="mt-6 flex flex-col gap-2">
-          <Button v-if="txResult.success" label="Share PDF Receipt" icon="pi pi-file-pdf" outlined severity="secondary" class="!text-xs !py-2" @click="downloadTXPDF" />
-          <Button label="Close" class="w-full !py-2 !text-xs btn-brand" @click="keys.modalResult = false" />
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+          <Button v-if="txResult.success" label="Share PDF Receipt" icon="pi pi-file-pdf" outlined severity="secondary" class="flex-1 !py-2.5 !text-sm" @click="downloadTXPDF" />
+          <Button label="Close" class="flex-1 !py-2.5 !text-sm btn-brand" @click="keys.modalResult = false" />
         </div>
 
-        <div class="mt-4 text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+        <div class="mt-6 text-[10px] text-gray-400 uppercase tracking-widest font-bold">
           Transaction powered by Nuimbase
         </div>
       </div>
@@ -278,7 +280,7 @@ const keys = reactive({
   modalSend: false,
   modalReceive: false,
   scannerOpen: false,
-  modalResult: false // New Result Dialog State
+  modalResult: false
 });
 
 const txResult = reactive({
@@ -454,7 +456,6 @@ const onReview = async () => {
   } finally { isCalculating.value = false; }
 };
 
-// --- UPDATED SEND LOGIC ---
 const onSend = async () => {
   if (stForm.value.pin.length !== 6) return;
   isSending.value = true;
@@ -469,10 +470,10 @@ const onSend = async () => {
     };
     const res = await $POST(payload, 'transfer/send');
 
-    // CLOSE SEND MODAL
+    // Close the Send Modal
     keys.modalSend = false;
 
-    // POPULATE RESULT DATA
+    // Populate and Open Result Dialog (Instead of Toast)
     txResult.success = res.success;
     if (res.success) {
       txResult.amount = stForm.value.amount;
@@ -483,10 +484,10 @@ const onSend = async () => {
       txResult.errorMessage = res.error || 'The blockchain network rejected this transaction. Please check your balance and try again.';
     }
 
-    // OPEN RESULT DIALOG
     keys.modalResult = true;
 
   } catch (e) {
+    // Open Result Dialog for Network Errors
     txResult.success = false;
     txResult.errorMessage = 'Network timeout. Please check your transaction history in a few minutes.';
     keys.modalResult = true;
