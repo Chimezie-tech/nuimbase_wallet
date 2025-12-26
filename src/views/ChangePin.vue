@@ -30,9 +30,35 @@
       content: { class: '!p-4' }
     }"
   >
+    <!-- STATE 0: LOADING -->
+    <div v-if="isLoading && uiState === 'checking'" class="flex justify-center py-6">
+       <i class="pi pi-spin pi-spinner text-green-500 text-2xl"></i>
+    </div>
 
-    <!-- STATE 1: MENU SELECTION -->
-    <div v-if="uiState === 'menu'" class="flex flex-col gap-2 py-1">
+    <!-- STATE 1: MISSING COUNTRY (NEW INTERVENTION) -->
+    <div v-else-if="uiState === 'missing-country'" class="flex flex-col gap-3">
+      <div class="bg-red-50 p-2 rounded border border-red-100">
+        <p class="text-[10px] text-red-800 flex items-start gap-2 leading-tight">
+          <i class="pi pi-info-circle mt-0.5 text-xs"></i>
+          Regulatory Update: Please confirm your country of origin to proceed.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <!-- Integrated Component -->
+        <CountrySelector v-model="countryForm.selected" :error="countryForm.error" />
+      </div>
+
+      <Button
+        label="Save & Continue"
+        class="w-full !py-1 !text-xs btn-brand mt-2"
+        :loading="isSavingCountry"
+        @click="saveCountry"
+      />
+    </div>
+
+    <!-- STATE 2: MENU SELECTION -->
+    <div v-else-if="uiState === 'menu'" class="flex flex-col gap-2 py-1">
       <button class="selection-card" @click="uiState = 'change-pin'">
         <div class="icon-box bg-orange-100 text-orange-600">
           <i class="pi pi-lock text-sm"></i>
@@ -48,7 +74,7 @@
         <div class="icon-box bg-purple-100 text-purple-600">
           <i class="pi pi-eye text-sm"></i>
         </div>
-        <div class="text-left"style="padding-top: 15px;" >
+        <div class="text-left" style="padding-top: 15px;">
           <h4 class="text-gray-700" style="font-size: 14px; font-family: Poppins;">View Seed Phrase</h4>
           <p class="text-[10px] text-gray-500">Reveal your seed phrase.</p>
         </div>
@@ -56,7 +82,7 @@
       </button>
     </div>
 
-    <!-- STATE 2: CHANGE PIN FORM -->
+    <!-- STATE 3: CHANGE PIN FORM -->
     <form v-else-if="uiState === 'change-pin'" @submit.prevent="onChangePin" class="flex flex-col gap-3">
       <div class="flex flex-col gap-1 items-center">
         <label class="text-[10px] font-bold text-gray-500 uppercase">Current PIN</label>
@@ -74,7 +100,7 @@
       </div>
     </form>
 
-    <!-- STATE 3: VIEW MNEMONIC AUTH -->
+    <!-- STATE 4: VIEW MNEMONIC AUTH -->
     <form v-else-if="uiState === 'view-auth'" @submit.prevent="onRevealMnemonic" class="flex flex-col gap-3">
       <div class="bg-yellow-50 p-2 rounded border border-yellow-200">
         <p class="text-[10px] text-yellow-800 flex items-start gap-2 leading-tight">
@@ -105,7 +131,7 @@
       </div>
     </form>
 
-    <!-- STATE 4: MNEMONIC DISPLAY -->
+    <!-- STATE 5: MNEMONIC DISPLAY -->
     <div v-else-if="uiState === 'view-display'" class="text-center">
       <div class="mb-2">
         <h5 class="text-gray-700 uppercase tracking-wide mb-1" style="size: 12px;">{{ viewForm.blockchain }} Keys</h5>
@@ -170,11 +196,14 @@
 import { onMounted, reactive, ref, computed } from 'vue';
 import { Button, Dialog, InputOtp, Select } from 'primevue';
 import { $POST } from '@/scripts/utils';
+import { supabase } from '@/scripts/supabase'; // Import Supabase
+import CountrySelector from '@/components/CountrySelector.vue'; // Import Component
 
 // --- STATE ---
-const uiState = ref('menu'); // 'menu' | 'change-pin' | 'view-auth' | 'view-display'
+const uiState = ref('checking'); // 'checking' | 'missing-country' | 'menu' | ...
 const isLoading = ref(false);
 const isDeleting = ref(false);
+const isSavingCountry = ref(false);
 const revealedMnemonic = ref('');
 
 const keys = reactive({
@@ -184,7 +213,9 @@ const keys = reactive({
 
 const pinForm = ref({ oldPin: '', newPin: '' });
 const viewForm = ref({ pin: '', blockchain: 'ETH' });
+const countryForm = ref({ selected: '', error: '' });
 const toast = ref({ show: false, message: '', type: 'success' });
+const currentUserUuid = ref(null);
 
 // Supported Chains
 const tokens = [
@@ -204,6 +235,8 @@ const tokens = [
 
 // --- COMPUTED ---
 const dialogHeader = computed(() => {
+  if (uiState.value === 'checking') return 'Checking Info';
+  if (uiState.value === 'missing-country') return 'Action Required';
   if (uiState.value === 'change-pin') return 'Update PIN';
   if (uiState.value === 'view-auth') return 'Verify Identity';
   if (uiState.value === 'view-display') return 'Key';
@@ -216,10 +249,74 @@ const mnemonicArray = computed(() => {
 
 // --- ACTIONS ---
 
-const openSecurityModal = () => {
-  uiState.value = 'menu';
-  resetForms();
+const openSecurityModal = async () => {
   keys.modalPin = true;
+  uiState.value = 'checking';
+  isLoading.value = true;
+  resetForms();
+
+  try {
+    // 1. Get User Session
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      showToast('Authentication Error', 'error');
+      keys.modalPin = false;
+      return;
+    }
+    currentUserUuid.value = user.id;
+
+    // 2. Check Database for Country
+    const { data, error } = await supabase
+      .from('customers')
+      .select('country')
+      .eq('uuid', user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // Ignore row not found for now
+       console.error(error);
+    }
+
+    // 3. Decide UI State
+    if (!data || !data.country) {
+      uiState.value = 'missing-country';
+    } else {
+      uiState.value = 'menu';
+    }
+
+  } catch (err) {
+    console.error(err);
+    uiState.value = 'menu'; // Fallback to menu if check fails
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const saveCountry = async () => {
+  countryForm.value.error = '';
+  if (!countryForm.value.selected) {
+    countryForm.value.error = 'Please select your country.';
+    return;
+  }
+
+  isSavingCountry.value = true;
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .update({ country: countryForm.value.selected })
+      .eq('uuid', currentUserUuid.value);
+
+    if (error) throw error;
+
+    showToast('Info Updated', 'success');
+    uiState.value = 'menu'; // Proceed to menu
+
+  } catch (err) {
+    console.error(err);
+    showToast('Failed to update. Try again.', 'error');
+  } finally {
+    isSavingCountry.value = false;
+  }
 };
 
 // 1. CHANGE PIN
@@ -291,7 +388,6 @@ const onDeleteWallet = async () => {
       pin: viewForm.value.pin,
       blockchain: viewForm.value.blockchain
     };
-    // Ensure this route exists in backend, otherwise it will fail
     const res = await $POST(payload, 'wallet/delete');
     if (res.success || res.message) {
       showToast('Deleted', 'success');
@@ -311,12 +407,17 @@ const resetAndClose = () => { keys.modalPin = false; resetForms(); };
 const resetForms = () => {
   pinForm.value = { oldPin: '', newPin: '' };
   viewForm.value = { pin: '', blockchain: 'ETH' };
+  countryForm.value = { selected: '', error: '' };
   revealedMnemonic.value = '';
 };
 const showToast = (msg, type) => {
   toast.value = { show: true, message: msg, type };
   setTimeout(() => { toast.value.show = false; }, 3000);
 };
+
+onMounted(() => {
+  // Optional: Pre-check auth on mount
+});
 </script>
 
 <style scoped>
@@ -397,6 +498,17 @@ const showToast = (msg, type) => {
 }
 .toast.success { background: #1bac4b; color: white; }
 .toast.error { background: #ef4444; color: white; }
+
+/* BRAND BUTTON */
+.btn-brand {
+  background-color: #1bac4b !important;
+  border-color: #1bac4b !important;
+  color: white !important;
+  border-radius: 4px !important;
+}
+.btn-brand:hover {
+  background-color: #16933f !important;
+}
 
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 

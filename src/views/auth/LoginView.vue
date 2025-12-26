@@ -36,6 +36,7 @@
 
       <div class="divider"></div>
 
+      <!-- LOGIN FORM -->
       <template v-if="activeForm === 'login'">
         <div class="input-group">
           <label>Email</label>
@@ -45,18 +46,10 @@
         <div class="input-group">
           <label>Password</label>
           <div class="password-wrapper">
-            <input
-              v-model="form.password"
-              :type="showPassword ? 'text' : 'password'"
-              class="input-field"
-              placeholder="Your password"
-              required
-            />
-            <i
-              :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"
-              class="toggle-password"
-              @click="showPassword = !showPassword"
-            ></i>
+            <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="input-field"
+              placeholder="Your password" required />
+            <i :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="toggle-password"
+              @click="showPassword = !showPassword"></i>
           </div>
         </div>
 
@@ -68,27 +61,25 @@
         </div>
       </template>
 
+      <!-- SIGNUP FORM -->
       <template v-if="activeForm === 'signup'">
         <div class="input-group">
           <label>Email</label>
           <input v-model="form.email" type="email" class="input-field" placeholder="Your email" required />
         </div>
 
+        <!-- Integrated Country Selector -->
+        <div class="input-group">
+          <CountrySelector v-model="form.country" />
+        </div>
+
         <div class="input-group">
           <label>Password</label>
           <div class="password-wrapper">
-            <input
-              v-model="form.password"
-              :type="showPassword ? 'text' : 'password'"
-              class="input-field"
-              placeholder="Choose a password"
-              required
-            />
-            <i
-              :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"
-              class="toggle-password"
-              @click="showPassword = !showPassword"
-            ></i>
+            <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="input-field"
+              placeholder="Choose a password" required />
+            <i :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="toggle-password"
+              @click="showPassword = !showPassword"></i>
           </div>
         </div>
 
@@ -99,6 +90,7 @@
         </div>
       </template>
 
+      <!-- FORGOT PASSWORD FORM -->
       <template v-if="activeForm === 'forgot'">
         <div class="input-group">
           <label>Email</label>
@@ -119,13 +111,15 @@
 import { ref } from "vue";
 import { supabase } from "@/scripts/supabase";
 import { useRouter } from "vue-router";
+import CountrySelector from "@/components/CountrySelector.vue"; // Imported Component
 
 const router = useRouter();
 
 const activeForm = ref("login");
-const form = ref({ email: "", password: "" });
+// Added country to form state
+const form = ref({ email: "", password: "", country: "" });
 const isLoading = ref(false);
-const showPassword = ref(false); // Eye icon toggle state
+const showPassword = ref(false);
 
 const toast = ref({
   show: false,
@@ -143,10 +137,11 @@ const showToast = (message, type = "success") => {
 const clearInputs = () => {
   form.value.email = "";
   form.value.password = "";
+  form.value.country = ""; // Clear country as well
 };
 
 const handleSubmit = async () => {
-  const { email, password } = form.value;
+  const { email, password, country } = form.value;
   isLoading.value = true;
 
   try {
@@ -154,7 +149,6 @@ const handleSubmit = async () => {
     if (activeForm.value === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-      // Clear inputs immediately after result
       clearInputs();
 
       if (error) {
@@ -168,26 +162,41 @@ const handleSubmit = async () => {
 
     // SIGNUP
     if (activeForm.value === "signup") {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-
-      // Clear inputs immediately after result
-      clearInputs();
-
-      if (error) {
-        showToast(error.message, "error");
+      // Validate Country Selection
+      if (!country) {
+        showToast("Please select your country of origin", "error");
+        isLoading.value = false;
         return;
       }
 
-      if (data.user) {
-        const { error: customerError } = await supabase
-          .from('customers')
-          .insert([{ uuid: data.user.id, email: email }]);
+      const { data, error } = await supabase.auth.signUp({ email, password });
 
-        if (customerError) console.error("Error:", customerError.message);
+      if (error) {
+        showToast(error.message, "error");
+        isLoading.value = false;
+        return; // Stop execution if auth fails
       }
 
-      showToast("Signup successful! you can now login.", "success");
-      // Switch back to login card
+      if (data.user) {
+        // Insert extra data (including country) to customers table
+        const { error: customerError } = await supabase
+          .from('customers')
+          .insert([
+            {
+              uuid: data.user.id,
+              email: email,
+              country: country // Saving the selected country code
+            }
+          ]);
+
+        if (customerError) {
+          console.error("Error saving customer details:", customerError.message);
+          // Optional: You might want to show a warning, but the auth user is created
+        }
+      }
+
+      clearInputs();
+      showToast("Signup successful! You can now login.", "success");
       activeForm.value = "login";
     }
 
@@ -206,6 +215,9 @@ const handleSubmit = async () => {
 
       showToast("Reset link sent! Check your email.", "success");
     }
+  } catch (err) {
+    console.error(err);
+    showToast("An unexpected error occurred", "error");
   } finally {
     isLoading.value = false;
   }
@@ -213,17 +225,16 @@ const handleSubmit = async () => {
 
 function gtag_report_conversion(url) {
   var callback = function () {
-    if (typeof(url) != 'undefined') {
+    if (typeof (url) != 'undefined') {
       window.location = url;
     }
   };
   gtag('event', 'conversion', {
-      'send_to': 'AW-659070632/c_VICIex2_sCEKi9oroC',
-      'event_callback': callback
+    'send_to': 'AW-659070632/c_VICIex2_sCEKi9oroC',
+    'event_callback': callback
   });
   return false;
 }
-
 </script>
 
 <style scoped>
@@ -242,7 +253,7 @@ function gtag_report_conversion(url) {
   padding: 1.5rem;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -350,7 +361,7 @@ function gtag_report_conversion(url) {
 .input-field:focus {
   border-color: #1bac4b;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(27,172,75,0.3);
+  box-shadow: 0 0 0 2px rgba(27, 172, 75, 0.3);
 }
 
 .submit-btn {
@@ -405,8 +416,13 @@ function gtag_report_conversion(url) {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== TOAST NOTIFICATION ===== */
@@ -449,12 +465,26 @@ function gtag_report_conversion(url) {
 }
 
 @keyframes slideInRight {
-  from { transform: translateX(400px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideOutRight {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(400px); opacity: 0; }
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
 }
 </style>
