@@ -28,14 +28,12 @@ const getChainId = (chain) => {
   return map[chain] || 1
 }
 
-// ✅ PLATFORM ADDRESSES
+// ✅ FIXED PLATFORM ADDRESSES
 const PLATFORM_ADDRESSES = {
   ETH: '0xb1d2f548b1569556EB405934B92b0c42a6bEE73e',
-  BTC: '3LQWg1QjEXvQWttCnCxLQzWaiV9rRvCfnC', // Mainnet
-  // BTC_TESTNET: 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx', // Add a testnet addr if needed
+  BTC: '3LQWg1QjEXvQWttCnCxLQzWaiV9rRvCfnC',
   LTC: 'ltc1qptnqhpjw3urr095xyzrmacdc73y4q8xmk0r08e',
   BSC: '0xE988Ee398418EFfDb2F6cB0D4B0427ba48Cd1092',
-  LTC: 'bc1ql8nmg8a2ydtnlhjm7yvcqe2vceftjc3vckuhlz',
   CELO: '0x86fFc748574F32D6bB2D98EE9ff388c2A7D4f9Ba',
   ONE: '0x8f2576C0e6C78bf73eE3fc4A78F100BE53F5dd2e',
   XDC: '0x601C1bf2460cB09B95EfE0eaDAe6EBaa55380658',
@@ -59,11 +57,15 @@ export default {
     return { platformFee: parseFloat(platformFee.toFixed(18)), config };
   },
 
+  // 1. GENERATE NEW WALLET
   async generateWallet(chain) {
+    // ✅ FIX: Normalize Solana name to match Frontend 'tokens' array
+    chain = chain.toUpperCase()
+    if (chain === 'SOL') chain = 'SOLANA'
+
     const mnemonic = bip39.generateMnemonic(256)
     const seed = await bip39.mnemonicToSeed(mnemonic)
     let address = '', privateKey = '', xpub = ''
-    chain = chain.toUpperCase()
 
     if (chain === 'BTC' || chain === 'LTC') {
       const network = NETWORK_BTC
@@ -74,19 +76,14 @@ export default {
       address = addr
       privateKey = child.toWIF()
       xpub = root.neutered().toBase58()
-    } else if (chain === 'SOL' || chain === 'SOLANA') {
-        // 1. Use the standard path for Solana (Coin Type 501)
-        const path = "m/44'/501'/0'/0'"
-
-        // 2. Derive the seed using ed25519-hd-key
-        const derivedSeed = derivePath(path, seed.toString('hex')).key
-
-        // 3. Create the Keypair from the derived seed
-        const keypair = Keypair.fromSeed(derivedSeed)
-
-        address = keypair.publicKey.toBase58()
-        privateKey = Buffer.from(keypair.secretKey).toString('hex')
-      } else {
+    } else if (chain === 'SOLANA') {
+      // ✅ STANDARD PHANTOM PATH
+      const path = "m/44'/501'/0'/0'"
+      const derivedSeed = derivePath(path, seed.toString('hex')).key
+      const keypair = Keypair.fromSeed(derivedSeed)
+      address = keypair.publicKey.toBase58()
+      privateKey = Buffer.from(keypair.secretKey).toString('hex')
+    } else {
       const wallet = ethers.Wallet.fromPhrase(mnemonic)
       address = wallet.address
       privateKey = wallet.privateKey
@@ -94,11 +91,13 @@ export default {
     return { mnemonic, privateKey, address, xpub, blockchain: chain }
   },
 
-    // 2. IMPORT EXISTING WALLET (NEW FUNCTION)
+  // 2. IMPORT EXISTING WALLET
   async importWallet(chain, data) {
+    // ✅ FIX: Normalize Solana name to match Frontend 'tokens' array
     chain = chain.toUpperCase()
-    data = String(data).trim()
+    if (chain === 'SOL') chain = 'SOLANA'
 
+    data = String(data).trim()
     let address = '', privateKey = '', mnemonic = null, xpub = ''
 
     // CHECK IF INPUT IS MNEMONIC
@@ -117,14 +116,14 @@ export default {
         address = addr
         privateKey = child.toWIF()
         xpub = root.neutered().toBase58()
-      } else if (chain === 'SOL' || chain === 'SOLANA') {
+      } else if (chain === 'SOLANA') {
+        // ✅ STANDARD PHANTOM PATH
         const path = "m/44'/501'/0'/0'"
         const derivedSeed = derivePath(path, seed.toString('hex')).key
         const keypair = Keypair.fromSeed(derivedSeed)
         address = keypair.publicKey.toBase58()
         privateKey = Buffer.from(keypair.secretKey).toString('hex')
       } else {
-        // EVM Mnemonic Import
         const wallet = ethers.Wallet.fromPhrase(mnemonic)
         address = wallet.address
         privateKey = wallet.privateKey
@@ -135,7 +134,6 @@ export default {
       privateKey = data
 
       if (chain === 'BTC' || chain === 'LTC') {
-        // Assume WIF format for BTC/LTC Import
         try {
           const network = NETWORK_BTC
           const keyPair = ECPair.fromWIF(privateKey, network)
@@ -144,16 +142,17 @@ export default {
           xpub = 'IMPORTED'
         } catch(e) { throw new Error('Invalid WIF Private Key') }
 
-      } else if (chain === 'SOL' || chain === 'SOLANA') {
-        // Assume Hex format for SOL Private Key
+      } else if (chain === 'SOLANA') {
         try {
+          // Solana PK is usually a Base58 string (Phantom Export) or Hex (Raw)
+          // We try to parse as Hex first, then Base58 if using a helper (BS58 not imported here)
+          // For now assuming Hex as per previous logic.
           const secretKey = Buffer.from(privateKey, 'hex')
           const keypair = Keypair.fromSecretKey(secretKey)
           address = keypair.publicKey.toBase58()
         } catch(e) { throw new Error('Invalid Solana Private Key (Hex required)') }
 
       } else {
-        // EVM Private Key Import
         try {
           const wallet = new ethers.Wallet(privateKey)
           address = wallet.address
@@ -164,12 +163,15 @@ export default {
     return { mnemonic, privateKey, address, xpub, blockchain: chain }
   },
 
+  // 3. TRANSACTION PREPARATION
   async prepareTransactionWithFee(chain, { privateKey, to, amount, nonce, gasPrice, utxos }) {
-    const config = FEES[chain] || FEES.DEFAULT
+    // ✅ FIX: Normalize Solana name
+    if (chain.toUpperCase() === 'SOL') chain = 'SOLANA'
+
+    const config = FEES[chain.toUpperCase()] || FEES.DEFAULT
     to = to ? String(to).trim().replace(/\s+/g, '') : ''
     if (!to) throw new Error('Recipient address is required')
 
-    // ✅ FIXED: Correct address selection logic
     let platformAddr = PLATFORM_ADDRESSES[chain] || PLATFORM_ADDRESSES.DEFAULT
     if (chain === 'BTC' && USE_TESTNET) platformAddr = PLATFORM_ADDRESSES.BTC_TESTNET
 
@@ -190,7 +192,7 @@ export default {
       return { signedMainTx, signedFeeTx, platformFee: feeVal, blockchainFee: 0 }
     }
 
-    // --- BITCOIN LOGIC (AMENDED) ---
+    // --- BITCOIN LOGIC ---
     if (chain === 'BTC') {
       const network = NETWORK_BTC
       const SATOSHI_PER_BTC = 100000000
@@ -204,7 +206,6 @@ export default {
 
       let inputSum = 0n
       utxos.forEach((u) => {
-        // ✅ FIX: Ensure value is BigInt and correctly scaled
         const valSats = typeof u.value === 'bigint' ? u.value : BigInt(Math.round(Number(u.value)))
         inputSum += valSats
         psbt.addInput({
@@ -214,10 +215,9 @@ export default {
         })
       })
 
-      // ✅ FIX: Safe rounding to avoid "not an integer" error
       const amountSat = BigInt(Math.round(parseFloat(amount) * SATOSHI_PER_BTC))
       const feeSat = BigInt(Math.round(Math.max(parseFloat(amount) * config.percent, config.min) * SATOSHI_PER_BTC))
-      const minerFee = 3000n // Standard Miner Fee
+      const minerFee = 3000n
 
       psbt.addOutput({ address: to, value: amountSat })
 

@@ -2,7 +2,7 @@
   <div class="send-wrapper">
 
     <div class="content-section">
-        <MarketTabs @repeat-transaction="handleRepeatTransaction" />
+      <MarketTabs @repeat-transaction="handleRepeatTransaction" />
     </div>
 
     <div class="fab-container">
@@ -18,50 +18,28 @@
         </button>
       </div>
 
-      <button
-        class="main-fab"
-        :class="{ 'is-open': isFabOpen }"
-        @click="isFabOpen = !isFabOpen"
-      >
+      <button class="main-fab" :class="{ 'is-open': isFabOpen }" @click="isFabOpen = !isFabOpen">
         <i class="pi pi-plus transition-transform duration-300" :class="{ 'rotate-45': isFabOpen }"></i>
       </button>
       <div v-if="isFabOpen" class="fab-backdrop" @click="isFabOpen = false"></div>
     </div>
 
-    <Dialog
-      v-model:visible="keys.modalSend"
-      :header="step === 1 ? 'Send Assets' : 'Confirm'"
-      modal
-      class="compact-dialog"
-      :style="{ width: '310px' }"
-      :pt="{
+    <Dialog v-model:visible="keys.modalSend" :header="step === 1 ? 'Send Assets' : 'Confirm'" modal
+      class="compact-dialog" :style="{ width: '310px' }" :pt="{
         header: { class: '!py-2 !px-4' },
         content: { class: '!p-4' }
-      }"
-    >
+      }">
       <form @submit.prevent="onReview" v-if="step === 1" class="flex flex-col gap-3">
         <div class="grid grid-cols-2 gap-2">
           <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-gray-500 uppercase">Fiat</label>
-            <Select
-              v-model="fiatForm.currency"
-              :options="fiatCurrencies"
-              option-label="key"
-              option-value="key"
-              class="w-full compact-select"
-              @change="updateExchangeRate"
-            />
+            <Select v-model="fiatForm.currency" :options="fiatCurrencies" option-label="key" option-value="key"
+              class="w-full compact-select" @change="updateExchangeRate" />
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-gray-500 uppercase">Asset</label>
-            <Select
-              v-model="stForm.selectedAssetKey"
-              :options="tokens"
-              option-label="key"
-              option-value="key"
-              class="w-full compact-select"
-              @change="onAssetChange"
-            />
+            <Select v-model="stForm.selectedAssetKey" :options="tokens" option-label="key" option-value="key"
+              class="w-full compact-select" @change="onAssetChange" />
           </div>
         </div>
 
@@ -76,12 +54,8 @@
         <div class="flex flex-col gap-1">
           <label class="text-[10px] font-bold text-gray-500 uppercase">To</label>
           <div class="input-icon-wrapper">
-            <InputText
-              v-model.trim="stForm.to"
-              placeholder="Address"
-              class="w-full compact-input pr-8"
-              @input="validationError = ''"
-            />
+            <InputText v-model.trim="stForm.to" placeholder="Address" class="w-full compact-input pr-8"
+              @input="validationError = ''" />
             <i class="pi pi-qrcode inner-icon text-xs" @click="openScanner"></i>
           </div>
           <small class="text-red-500 text-[9px] leading-tight" v-if="validationError">{{ validationError }}</small>
@@ -90,32 +64,17 @@
         <div class="flex flex-col gap-2 p-2 border border-gray-200 rounded bg-white">
           <div class="flex items-center gap-2">
             <span class="text-[10px] font-bold text-gray-400 w-8">{{ fiatForm.currency }}</span>
-            <InputText
-              v-model="fiatForm.amount"
-              placeholder="0.00"
-              type="number"
-              class="w-full compact-input text-right"
-              @input="convertFiatToCrypto"
-            />
+            <InputText v-model="fiatForm.amount" placeholder="0.00" type="number"
+              class="w-full compact-input text-right" @input="convertFiatToCrypto" />
           </div>
           <div class="flex items-center gap-2">
             <span class="text-[10px] font-bold text-gray-400 w-8">{{ getCurrencyLabel() }}</span>
-            <InputText
-              v-model="stForm.amount"
-              placeholder="0.00"
-              type="number"
-              class="w-full compact-input text-right"
-              @input="convertCryptoToFiat"
-            />
+            <InputText v-model="stForm.amount" placeholder="0.00" type="number" class="w-full compact-input text-right"
+              @input="convertCryptoToFiat" />
           </div>
         </div>
 
-        <Button
-          type="submit"
-          label="Review"
-          class="w-full !py-2 !text-xs btn-brand"
-          :loading="isCalculating"
-        />
+        <Button type="submit" label="Review" class="w-full !py-2 !text-xs btn-brand" :loading="isCalculating" />
       </form>
 
       <form @submit.prevent="onSend" v-if="step === 2" class="flex flex-col gap-3">
@@ -146,30 +105,26 @@
         <div class="flex flex-col gap-1">
           <label class="text-[10px] font-bold text-gray-500 uppercase text-center">Confirm PIN</label>
           <div class="flex justify-center">
-             <InputOtp v-model="stForm.pin" :length="6" mask integer />
+            <InputOtp v-model="stForm.pin" :length="6" mask integer />
           </div>
         </div>
 
         <div class="flex gap-2 mt-1">
-          <Button type="button" label="Back" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs" @click="step = 1" />
-          <Button type="submit" label="Confirm Send" class="flex-1 !py-1 !text-xs btn-brand" :loading="isSending" :disabled="stForm.pin.length !== 6" />
+          <Button type="button" label="Back" severity="secondary" size="small" outlined class="flex-1 !py-1 !text-xs"
+            @click="step = 1" />
+          <Button type="submit" label="Confirm Send" class="flex-1 !py-1 !text-xs btn-brand" :loading="isSending"
+            :disabled="stForm.pin.length !== 6" />
         </div>
       </form>
     </Dialog>
 
     <!-- UPDATED RESULT DIALOG: Responsive, Medium Size, Flexible -->
-    <Dialog
-      v-model:visible="keys.modalResult"
-      modal
-      class="compact-dialog result-dialog"
-      :style="{ width: '500px', maxWidth: '90vw' }"
-      :breakpoints="{ '960px': '75vw', '641px': '95vw' }"
-      :closable="false"
-      :pt="{
+    <Dialog v-model:visible="keys.modalResult" modal class="compact-dialog result-dialog"
+      :style="{ width: '500px', maxWidth: '90vw' }" :breakpoints="{ '960px': '75vw', '641px': '95vw' }"
+      :closable="false" :pt="{
         header: { class: '!hidden' },
         content: { class: '!p-0' }
-      }"
-    >
+      }">
       <div id="receipt-content" class="p-6 text-center">
         <div v-if="txResult.success" class="result-icon-box success-bg mx-auto mb-4">
           <i class="pi pi-check text-3xl" style="color: #1bac4b"></i>
@@ -197,13 +152,15 @@
             <span class="text-xs text-gray-500">TX Hash</span>
             <div class="flex items-center gap-2">
               <span class="text-truncate font-mono text-xs" style="max-width: 140px;">{{ txResult.txHash }}</span>
-              <i class="pi pi-copy text-xs cursor-pointer text-brand hover:text-green-700" @click="copyText(txResult.txHash)"></i>
+              <i class="pi pi-copy text-xs cursor-pointer text-brand hover:text-green-700"
+                @click="copyText(txResult.txHash)"></i>
             </div>
           </div>
         </div>
 
         <div class="mt-8 flex flex-col sm:flex-row gap-3">
-          <Button v-if="txResult.success" label="Share PDF Receipt" icon="pi pi-file-pdf" outlined severity="secondary" class="flex-1 !py-2.5 !text-sm" @click="downloadTXPDF" />
+          <Button v-if="txResult.success" label="Share PDF Receipt" icon="pi pi-file-pdf" outlined severity="secondary"
+            class="flex-1 !py-2.5 !text-sm" @click="downloadTXPDF" />
           <Button label="Close" class="flex-1 !py-2.5 !text-sm btn-brand" @click="keys.modalResult = false" />
         </div>
 
@@ -213,26 +170,14 @@
       </div>
     </Dialog>
 
-    <Dialog
-      v-model:visible="keys.modalReceive"
-      header="Receive"
-      modal
-      class="compact-dialog"
-      :style="{ width: '310px' }"
-      :pt="{
+    <Dialog v-model:visible="keys.modalReceive" header="Receive" modal class="compact-dialog"
+      :style="{ width: '310px' }" :pt="{
         header: { class: '!py-2 !px-4' },
         content: { class: '!p-4' }
-      }"
-    >
+      }">
       <div id="printable-receive" class="flex flex-col items-center gap-3 text-center">
-        <Select
-          v-model="receiveForm.selectedAssetKey"
-          :options="tokens"
-          option-label="label"
-          option-value="key"
-          class="w-full compact-select"
-          @change="generateReceiveQR"
-        />
+        <Select v-model="receiveForm.selectedAssetKey" :options="tokens" option-label="label" option-value="key"
+          class="w-full compact-select" @change="generateReceiveQR" />
         <div class="bg-white p-2 border border-gray-100 rounded-lg shadow-sm">
           <img v-if="receiveForm.qrCode" :src="receiveForm.qrCode" alt="QR" class="w-32 h-32" />
         </div>
@@ -242,16 +187,19 @@
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2 mt-3">
-        <Button label="Copy" icon="pi pi-copy" severity="secondary" outlined size="small" class="!text-xs" @click="copyReceiveAddress" />
-        <Button label="Share" icon="pi pi-share-alt" severity="help" outlined size="small" class="!text-xs" @click="downloadReceivePDF" />
+        <Button label="Copy" icon="pi pi-copy" severity="secondary" outlined size="small" class="!text-xs"
+          @click="copyReceiveAddress" />
+        <Button label="Share" icon="pi pi-share-alt" severity="help" outlined size="small" class="!text-xs"
+          @click="downloadReceivePDF" />
       </div>
     </Dialog>
 
-    <Dialog v-model:visible="keys.scannerOpen" header="Scan QR" modal class="compact-dialog" :style="{ width: '310px' }">
+    <Dialog v-model:visible="keys.scannerOpen" header="Scan QR" modal class="compact-dialog"
+      :style="{ width: '310px' }">
       <div class="flex flex-col gap-2">
         <div class="overflow-hidden rounded-lg bg-black h-56 relative">
           <QrcodeStream @detect="onDecode" @error="onError" :track="paintBoundingBox">
-             <div class="absolute inset-0 border-2 border-green-500 opacity-50 m-8 rounded-lg"></div>
+            <div class="absolute inset-0 border-2 border-green-500 opacity-50 m-8 rounded-lg"></div>
           </QrcodeStream>
         </div>
         <Button label="Cancel" severity="secondary" size="small" class="w-full !py-1 !text-xs" @click="closeScanner" />
@@ -298,7 +246,14 @@ const tokens = [
   { label: 'BTC', key: 'BTC', blockchain: 'BTC', isToken: false },
   { label: 'ETH', key: 'ETH', blockchain: 'ETH', isToken: false },
   { label: 'BSC', key: 'BSC', blockchain: 'BSC', isToken: false },
-  { label: 'SOL', key: 'SOL', blockchain: 'SOLANA', isToken: false },
+  { label: 'CELO', key: 'CELO', blockchain: 'CELO', isToken: false },
+  { label: 'ONE', key: 'ONE', blockchain: 'ONE', isToken: false },
+  { label: 'XDC', key: 'XDC', blockchain: 'XDC', isToken: false },
+  { label: 'KLAYTN', key: 'KLAYTN', blockchain: 'KLAYTN', isToken: false },
+  { label: 'ALGO', key: 'ALGO', blockchain: 'ALGO', isToken: false },
+  { label: 'KCS', key: 'KCS', blockchain: 'KCS', isToken: false },
+  { label: 'LTC', key: 'LTC', blockchain: 'LTC', isToken: false },
+  { label: 'SOLANA', key: 'SOLANA', blockchain: 'SOLANA', isToken: false },
   { label: 'USDT (ETH)', key: 'USDT_ETH', blockchain: 'ETH', isToken: true, symbol: 'USDT' },
   { label: 'USDT (BSC)', key: 'USDT_BSC', blockchain: 'BSC', isToken: true, symbol: 'USDT' },
   { label: 'USDC (ETH)', key: 'USDC_ETH', blockchain: 'ETH', isToken: true, symbol: 'USDC' },
@@ -343,14 +298,14 @@ const onStart = async () => {
       userWallets.value = res.wallets;
       userWallets.value.forEach(async (w) => {
         const balRes = await $POST({ blockchain: w.blockchain }, 'wallet/balance');
-        if(balRes.success) {
-           const idx = userWallets.value.findIndex(uw => uw.blockchain === w.blockchain);
-           if(idx !== -1) userWallets.value[idx].balance = balRes.balance.availBalance || balRes.balance.incoming;
+        if (balRes.success) {
+          const idx = userWallets.value.findIndex(uw => uw.blockchain === w.blockchain);
+          if (idx !== -1) userWallets.value[idx].balance = balRes.balance.availBalance || balRes.balance.incoming;
         }
       });
     }
     updateExchangeRate();
-  } catch(e) { console.error(e); }
+  } catch (e) { console.error(e); }
 };
 
 const handleRepeatTransaction = (tx) => {
@@ -398,7 +353,7 @@ const convertCryptoToFiat = () => {
 };
 
 const formatFiat = (val) => {
-  if(!val) return '0.00';
+  if (!val) return '0.00';
   const currencySym = fiatCurrencies.find(f => f.key === fiatForm.value.currency)?.symbol || '';
   return `${currencySym}${parseFloat(val).toFixed(2)}`;
 }
@@ -496,15 +451,30 @@ const onSend = async () => {
 
 const generateReceiveQR = async () => {
   const asset = getReceiveAsset();
-  const wallet = userWallets.value.find(w => w.blockchain === asset.blockchain);
+
+  // ✅ FIX: Check for both 'SOLANA' and 'SOL' (Case-insensitive)
+  const wallet = userWallets.value.find(w => {
+    const wChain = w.blockchain.toUpperCase();
+    const aChain = asset.blockchain.toUpperCase();
+    const aKey = asset.key.toUpperCase();
+
+    return wChain === aChain || wChain === aKey;
+  });
+
   if (wallet && wallet.address) {
     receiveForm.value.address = wallet.address;
     try {
       receiveForm.value.qrCode = await QRCode.toDataURL(wallet.address, {
         width: 200, margin: 1, color: { dark: '#000000', light: '#ffffff' }
       });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error("QR Generation Error:", err);
+    }
   } else {
+    // Debugging: Log to see why it wasn't found
+    console.warn("Wallet not found for asset:", asset.key);
+    console.log("Available Wallets:", userWallets.value.map(w => w.blockchain));
+
     receiveForm.value.address = 'No wallet found';
     receiveForm.value.qrCode = '';
   }
@@ -566,7 +536,7 @@ const openScanner = () => { keys.scannerOpen = true; };
 const closeScanner = () => { keys.scannerOpen = false; };
 const onDecode = (detected) => {
   let result = detected[0]?.rawValue;
-  if(result) {
+  if (result) {
     result = result.replace(/^(bitcoin:|ethereum:)/i, '').trim();
     stForm.value.to = result;
     closeScanner();
@@ -589,11 +559,21 @@ onMounted(() => { onStart(); });
 </script>
 
 <style scoped>
-.send-wrapper { width: 100%; }
-.content-section { width: 100%; max-width: 800px; margin: 0 auto; padding-bottom: 100px; }
+.send-wrapper {
+  width: 100%;
+}
+
+.content-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
 
 /* 1. BRAND STYLING */
-.text-brand { color: #1bac4b !important; }
+.text-brand {
+  color: #1bac4b !important;
+}
 
 .btn-brand {
   background-color: #1bac4b !important;
@@ -607,84 +587,226 @@ onMounted(() => { onStart(); });
 }
 
 /* 2. RESULT DIALOG SPECIFICS */
-.result-dialog { border-radius: 4px !important; overflow: hidden; }
+.result-dialog {
+  border-radius: 4px !important;
+  overflow: hidden;
+}
 
 .result-icon-box {
-  width: 60px; height: 60px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.success-bg { background-color: rgba(27, 172, 75, 0.1); }
-.error-bg { background-color: rgba(239, 68, 68, 0.1); }
+
+.success-bg {
+  background-color: rgba(27, 172, 75, 0.1);
+}
+
+.error-bg {
+  background-color: rgba(239, 68, 68, 0.1);
+}
 
 .result-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
-.result-row span { font-size: 11px; color: #888; }
-.result-row strong { font-size: 12px; color: #333; }
+
+.result-row span {
+  font-size: 11px;
+  color: #888;
+}
+
+.result-row strong {
+  font-size: 12px;
+  color: #333;
+}
 
 /* 3. TWITTER-STYLE FAB */
 .fab-container {
-  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
-  display: flex; flex-direction: column; align-items: end; gap: 12px;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: 12px;
 }
 
 .main-fab {
-  width: 50px; height: 50px; border-radius: 50%;
-  background: #1bac4b; color: white; border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #1bac4b;
+  color: white;
+  border: none;
   box-shadow: 0 4px 12px rgba(27, 172, 75, 0.4);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1002;
 }
-.main-fab.is-open { background: #333; transform: rotate(135deg); }
+
+.main-fab.is-open {
+  background: #333;
+  transform: rotate(135deg);
+}
 
 .fab-options {
-  display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
-  animation: slideUp 0.2s ease-out; z-index: 1002; margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  animation: slideUp 0.2s ease-out;
+  z-index: 1002;
+  margin-bottom: 5px;
 }
 
-.fab-option { display: flex; align-items: center; gap: 10px; border: none; background: transparent; cursor: pointer; }
-.fab-label {
-  background: white; padding: 10px 30px; border-radius: 4px; font-size: 12px; font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: #555;
-  opacity: 0; animation: fadeIn 0.2s 0.1s forwards;
+.fab-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
+
+.fab-label {
+  background: white;
+  padding: 10px 30px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #555;
+  opacity: 0;
+  animation: fadeIn 0.2s 0.1s forwards;
+}
+
 .fab-icon {
-  width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2); transition: transform 0.2s;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
 }
 
 .fab-backdrop {
-  position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); z-index: 1001;
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 1001;
 }
 
 /* 4. COMPACT UI */
-.compact-dialog :deep(.p-dialog-header) { padding: 10px 15px !important; border-radius: 4px 4px 0 0; }
-.compact-dialog :deep(.p-dialog-content) { padding: 0 15px 15px 15px !important; border-radius: 0 0 4px 4px; }
-
-.compact-input :deep(.p-inputtext), .compact-select :deep(.p-select-label) {
-  padding: 0.4rem; font-size: 0.75rem; height: 2.2rem; border-radius: 4px;
+.compact-dialog :deep(.p-dialog-header) {
+  padding: 10px 15px !important;
+  border-radius: 4px 4px 0 0;
 }
 
-.input-icon-wrapper { position: relative; display: flex; align-items: center; }
-.inner-icon { position: absolute; right: 10px; cursor: pointer; color: #666; }
+.compact-dialog :deep(.p-dialog-content) {
+  padding: 0 15px 15px 15px !important;
+  border-radius: 0 0 4px 4px;
+}
+
+.compact-input :deep(.p-inputtext),
+.compact-select :deep(.p-select-label) {
+  padding: 0.4rem;
+  font-size: 0.75rem;
+  height: 2.2rem;
+  border-radius: 4px;
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inner-icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #666;
+}
 
 .toast {
-  position: fixed; top: 16px; right: 16px; padding: 8px 16px;
-  border-radius: 4px; display: flex; align-items: center; gap: 8px;
-  font-size: 0.8rem; font-weight: 600; z-index: 11000;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15); animation: slideIn 0.3s;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 11000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s;
 }
-.toast.success { background: #1bac4b; color: white; }
-.toast.error { background: #ef4444; color: white; }
 
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast.success {
+  background: #1bac4b;
+  color: white;
+}
+
+.toast.error {
+  background: #ef4444;
+  color: white;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 
 @media (max-width: 767px) {
-  .fab-container { bottom: 80px; right: 16px; }
+  .fab-container {
+    bottom: 80px;
+    right: 16px;
+  }
 }
 </style>

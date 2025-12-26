@@ -388,6 +388,16 @@ const onDeleteWallet = async () => {
       throw error;
     }
 
+    const { e } = await supabase
+      .from('customerWalletAddr')
+      .delete()
+      .eq('uuid', user.id)
+      .eq('blockchain', viewForm.value.blockchain);
+
+    if (e) {
+      throw e;
+    }
+
     // 3. Check if anything was actually deleted
     if (count === 0) {
       throw new Error("Wallet not found or permission denied.");
