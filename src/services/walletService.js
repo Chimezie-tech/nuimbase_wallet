@@ -6,6 +6,7 @@ import ECPairFactory from 'ecpair'
 import * as ecc from 'tiny-secp256k1'
 import { Keypair } from '@solana/web3.js'
 import { Buffer } from 'buffer'
+import { derivePath } from 'ed25519-hd-key'
 
 if (typeof window !== 'undefined') window.Buffer = Buffer
 
@@ -74,10 +75,18 @@ export default {
       privateKey = child.toWIF()
       xpub = root.neutered().toBase58()
     } else if (chain === 'SOL' || chain === 'SOLANA') {
-      const keypair = Keypair.fromSeed(seed.slice(0, 32))
-      address = keypair.publicKey.toBase58()
-      privateKey = Buffer.from(keypair.secretKey).toString('hex')
-    } else {
+        // 1. Use the standard path for Solana (Coin Type 501)
+        const path = "m/44'/501'/0'/0'"
+
+        // 2. Derive the seed using ed25519-hd-key
+        const derivedSeed = derivePath(path, seed.toString('hex')).key
+
+        // 3. Create the Keypair from the derived seed
+        const keypair = Keypair.fromSeed(derivedSeed)
+
+        address = keypair.publicKey.toBase58()
+        privateKey = Buffer.from(keypair.secretKey).toString('hex')
+      } else {
       const wallet = ethers.Wallet.fromPhrase(mnemonic)
       address = wallet.address
       privateKey = wallet.privateKey

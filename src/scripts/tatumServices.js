@@ -322,7 +322,6 @@ async getUTXOs(chain, address, amountBtc = 0) {
         })
 
         if (!res.ok && chain === 'BTC' && USE_TESTNET) {
-          console.log('⚠️ Tatum broadcast failed (403), using Blockstream API...')
           url = 'https://blockstream.info/testnet/api/tx'
           res = await fetch(url, {
             method: 'POST',

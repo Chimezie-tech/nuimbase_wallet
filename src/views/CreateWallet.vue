@@ -245,7 +245,7 @@ const tokens = [
   { key: 'ETH', label: 'Ethereum (ETH)' },
   { key: 'BSC', label: 'Binance Smart Chain (BSC)' },
   { key: 'LTC', label: 'Litecoin (LTC)' },
-  // { key: 'SOL', label: 'Solana (SOL)' },
+  { key: 'SOL', label: 'Solana (SOL)' },
   // { key: 'TRON', label: 'Tron (TRX)' },
   { key: 'CELO', label: 'Celo (CELO)' },
   { key: 'ONE', label: 'Harmony (ONE)' },
@@ -294,7 +294,7 @@ const openWalletFlow = async () => {
   }
 };
 
-  const handleRepeatTransaction = (tx) => {
+const handleRepeatTransaction = (tx) => {
   // 1. Open the Send Modal
   // 2. Pre-fill data
   // Example if using a ref to the Send Component:
