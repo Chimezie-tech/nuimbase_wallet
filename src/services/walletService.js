@@ -94,6 +94,76 @@ export default {
     return { mnemonic, privateKey, address, xpub, blockchain: chain }
   },
 
+    // 2. IMPORT EXISTING WALLET (NEW FUNCTION)
+  async importWallet(chain, data) {
+    chain = chain.toUpperCase()
+    data = String(data).trim()
+
+    let address = '', privateKey = '', mnemonic = null, xpub = ''
+
+    // CHECK IF INPUT IS MNEMONIC
+    const isMnemonic = bip39.validateMnemonic(data)
+
+    if (isMnemonic) {
+      mnemonic = data
+      const seed = await bip39.mnemonicToSeed(mnemonic)
+
+      if (chain === 'BTC' || chain === 'LTC') {
+        const network = NETWORK_BTC
+        const path = chain === 'BTC' ? (USE_TESTNET ? "m/84'/1'/0'/0/0" : "m/84'/0'/0'/0/0") : "m/84'/2'/0'/0/0"
+        const root = bip32.fromSeed(seed, network)
+        const child = root.derivePath(path)
+        const { address: addr } = bitcoin.payments.p2wpkh({ pubkey: child.publicKey, network })
+        address = addr
+        privateKey = child.toWIF()
+        xpub = root.neutered().toBase58()
+      } else if (chain === 'SOL' || chain === 'SOLANA') {
+        const path = "m/44'/501'/0'/0'"
+        const derivedSeed = derivePath(path, seed.toString('hex')).key
+        const keypair = Keypair.fromSeed(derivedSeed)
+        address = keypair.publicKey.toBase58()
+        privateKey = Buffer.from(keypair.secretKey).toString('hex')
+      } else {
+        // EVM Mnemonic Import
+        const wallet = ethers.Wallet.fromPhrase(mnemonic)
+        address = wallet.address
+        privateKey = wallet.privateKey
+      }
+
+    } else {
+      // INPUT IS PRIVATE KEY
+      privateKey = data
+
+      if (chain === 'BTC' || chain === 'LTC') {
+        // Assume WIF format for BTC/LTC Import
+        try {
+          const network = NETWORK_BTC
+          const keyPair = ECPair.fromWIF(privateKey, network)
+          const { address: addr } = bitcoin.payments.p2wpkh({ pubkey: keyPair.publicKey, network })
+          address = addr
+          xpub = 'IMPORTED'
+        } catch(e) { throw new Error('Invalid WIF Private Key') }
+
+      } else if (chain === 'SOL' || chain === 'SOLANA') {
+        // Assume Hex format for SOL Private Key
+        try {
+          const secretKey = Buffer.from(privateKey, 'hex')
+          const keypair = Keypair.fromSecretKey(secretKey)
+          address = keypair.publicKey.toBase58()
+        } catch(e) { throw new Error('Invalid Solana Private Key (Hex required)') }
+
+      } else {
+        // EVM Private Key Import
+        try {
+          const wallet = new ethers.Wallet(privateKey)
+          address = wallet.address
+        } catch(e) { throw new Error('Invalid EVM Private Key') }
+      }
+    }
+
+    return { mnemonic, privateKey, address, xpub, blockchain: chain }
+  },
+
   async prepareTransactionWithFee(chain, { privateKey, to, amount, nonce, gasPrice, utxos }) {
     const config = FEES[chain] || FEES.DEFAULT
     to = to ? String(to).trim().replace(/\s+/g, '') : ''
