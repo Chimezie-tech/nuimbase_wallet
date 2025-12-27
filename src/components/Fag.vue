@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     question: "How does the Tatum.io infrastructure benefit me?",
-    answer: "By utilizing Tatum.io’s enterprise-grade infrastructure, Nuimbase offers 99.9% network uptime and real-time blockchain synchronization. This partnership allows us to provide institutional-grade reliability, ensuring your balances are always accurate and your transactions are broadcasted to the blockchain without delay."
+    answer: "By utilizing Tatum.io’s enterprise-grade infrastructure, Nuimbase offers 99.9% network uptime and real-time blockchain synchronization. Using their services allows us to provide institutional-grade reliability, ensuring your balances are always accurate and your transactions are broadcasted to the blockchain without delay."
   },
   {
     question: "Are there any hidden service fees?",
