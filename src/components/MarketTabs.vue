@@ -202,17 +202,22 @@ const initData = async () => {
 
 const fetchCoins = async () => {
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&sparkline=false&price_change_percentage=24h')
+    const res = await fetch('https://api.coinpaprika.com/v1/tickers')
+    const data = await res.json()
 
-    // Check if the server actually returned data
-    if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${res.statusText}`)
-    }
-
-    coinData.value = await res.json()
+    // CoinPaprika returns thousands of coins, so we slice the top 30
+    coinData.value = data.slice(0, 30).map(coin => ({
+      id: coin.id,
+      symbol: coin.symbol.toLowerCase(),
+      name: coin.name,
+      // CoinPaprika hosts their own logos matching the ID
+      image: `https://static.coinpaprika.com/coin/${coin.id}/logo.png`,
+      current_price: coin.quotes.USD.price,
+      price_change_percentage_24h: coin.quotes.USD.percent_change_24h,
+      market_cap: coin.quotes.USD.market_cap
+    }))
   } catch (err) {
-    console.error("Fetch failed:", err.message)
-    // Optional: Set an error state to show in UI
+    console.error("CoinPaprika Error:", err)
   }
 }
 
@@ -234,13 +239,24 @@ const openCoinDetails = (coin) => {
 
 const fetchGraphData = async (days) => {
   selectedRange.value = days
-  graphData.value = [] // Reset to trigger spinner
+  graphData.value = []
+
+  // Determine interval based on time range to prevent too much/little data
+  // 1D -> 15min candles, 1W -> 2hr candles, 1M -> 12hr candles, 1Y -> 1day candles
+  let interval = 'm15'
+  if (days === 7) interval = 'h2'
+  if (days === 30) interval = 'h12'
+  if (days === 365) interval = 'd1'
+
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${selectedCoin.value.id}/market_chart?vs_currency=usd&days=${days}`)
-    const data = await res.json()
-    // Extract only prices (index 1 of array)
-    graphData.value = data.prices.map(p => p[1])
-  } catch (e) { console.error("Graph Error", e) }
+    const res = await fetch(`https://api.coincap.io/v2/assets/${selectedCoin.value.id}/history?interval=${interval}`)
+    const json = await res.json()
+
+    // Map the response to just an array of numbers as your graph expects
+    graphData.value = json.data.map(d => parseFloat(d.priceUsd))
+  } catch (e) {
+    console.error("Graph Error", e)
+  }
 }
 
 // Convert Array of Numbers to SVG Path
