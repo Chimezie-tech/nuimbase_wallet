@@ -203,8 +203,17 @@ const initData = async () => {
 const fetchCoins = async () => {
   try {
     const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&sparkline=false&price_change_percentage=24h')
+
+    // Check if the server actually returned data
+    if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${res.statusText}`)
+    }
+
     coinData.value = await res.json()
-  } catch (err) { console.error(err) }
+  } catch (err) {
+    console.error("Fetch failed:", err.message)
+    // Optional: Set an error state to show in UI
+  }
 }
 
 const fetchTransactions = async () => {
