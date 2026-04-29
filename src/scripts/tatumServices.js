@@ -1,6 +1,8 @@
 // services/tatumServices.js
 
 import { ethers } from 'ethers'
+import { TOKEN_DATA, getTokenInfo } from './tokenConfig' // Import the new config
+
 
 // ✅ CONFIGURATION
 const TATUM_API_KEY = import.meta.env.VITE_TATUM_MAINNET_API
@@ -170,10 +172,54 @@ export default {
     return FEES[chain.toUpperCase()] || FEES.DEFAULT
   },
 
-  async getBalance(chain, address) {
+async getBalance(chain, address, symbol = null) {
     if (!address || address === 'undefined') return '0'
     chain = chain.toUpperCase()
 
+    // 1. DYNAMIC TOKEN CHECK
+    // This handles USDT/USDC for ETH, BSC, POLYGON, CELO, and SOL
+    const tokenInfo = getTokenInfo(chain, symbol);
+
+    if (tokenInfo) {
+      try {
+        const { rpcSlug } = getChainConfig(chain);
+        const url = `${BASE_URL}/blockchain/node/${rpcSlug}`;
+
+        // A. SOLANA TOKEN (SPL)
+        if (chain === 'SOL' || chain === 'SOLANA') {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1,
+              method: 'getTokenAccountsByOwner',
+              params: [address, { mint: tokenInfo.address }, { encoding: 'jsonParsed' }]
+            }),
+          });
+          const data = await res.json();
+          // Logic to grab the specific UI amount from the first token account found
+          const amount = data.result?.value?.[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
+          return amount !== undefined ? amount.toString() : '0';
+        }
+
+        // B. EVM TOKENS (ERC-20)
+        const provider = new ethers.JsonRpcProvider(url, undefined, {
+             staticNetwork: true,
+             headers: { 'x-api-key': TATUM_API_KEY }
+        });
+        const abi = ["function balanceOf(address owner) view returns (uint256)"];
+        const contract = new ethers.Contract(tokenInfo.address, abi, provider);
+        const rawBalance = await contract.balanceOf(address);
+        return ethers.formatUnits(rawBalance, tokenInfo.decimals);
+
+      } catch (e) {
+        console.error(`${symbol} balance error on ${chain}:`, e);
+        return '0';
+      }
+    }
+
+    // 2. NATIVE BALANCES (The code you already have)
+    // This handles BTC, LTC, and Native SOL/ETH/BSC
     if (['SOL', 'ALGO', 'TRON', 'BTC', 'LTC'].includes(chain)) {
       if (address.startsWith('0x') && chain !== 'XDC') return '0'
     }
@@ -182,6 +228,7 @@ export default {
       const { apiSlug, rpcSlug } = getChainConfig(chain)
       let url = ''
 
+      // BTC/LTC Logic
       if (['BTC', 'LTC'].includes(chain)) {
         url = `${BASE_URL}/${apiSlug}/address/balance/${address}`
         const res = await fetch(url, { headers: getHeaders() })
@@ -190,6 +237,7 @@ export default {
         return (parseFloat(data.incoming || 0) - parseFloat(data.outgoing || 0)).toString()
       }
 
+      // Native SOL Logic
       if (chain === 'SOL' || chain === 'SOLANA') {
         url = `${BASE_URL}/blockchain/node/${rpcSlug}`
         const res = await fetch(url, {
@@ -202,6 +250,7 @@ export default {
         return '0'
       }
 
+      // Other EVM Native Balances
       url = `${BASE_URL}/${apiSlug}/account/balance/${address}`
       const res = await fetch(url, { headers: getHeaders() })
       if (!res.ok) return '0'
@@ -210,7 +259,7 @@ export default {
     } catch (e) {
       return '0'
     }
-  },
+},
 
   async getNonce(chain, address) {
     if (['BTC', 'LTC', 'SOL', 'ALGO', 'TRON'].includes(chain)) return 0

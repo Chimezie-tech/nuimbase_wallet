@@ -215,7 +215,7 @@ export const $POST = async (body, endpoint) => {
       const { data } = await supabase.from('customerWalletAddr').select('address').eq('uuid', user.id).eq('blockchain', body.blockchain).maybeSingle();
       if (!data) return { success: false };
 
-      const balance = await tatumService.getBalance(body.blockchain, data.address);
+      const balance = await tatumService.getBalance(body.blockchain, data.address, body.symbol);
       return { success: true, balance: { availBalance: balance, incoming: balance } };
     }
 
@@ -231,71 +231,78 @@ export const $POST = async (body, endpoint) => {
     // ------------------------------------------
     // TRANSACTION ROUTES (CORRECTED WITH FEES)
     // ------------------------------------------
-    if (endpoint === 'transfer/fee') {
-      const config = tatumService.getFeeConfig(body.blockchain);
-      const gasPrice = await tatumService.getGasPrice(body.blockchain);
+    if (endpoint === 'transfer/fee') {
+      const config = tatumService.getFeeConfig(body.blockchain);
+      const gasPrice = await tatumService.getGasPrice(body.blockchain);
 
-      let networkFee = 0.0005;
-      // Estimate simple network fee for display (approximate)
-      if (['ETH', 'BSC'].includes(body.blockchain)) {
-        networkFee = (21000 * gasPrice) / 1e9;
-      } else if (body.blockchain === 'BTC') {
-        networkFee = 0.00005; // ~5000 sats average
-      }
+      let networkFee = 0.0005;
 
-      const amount = parseFloat(body.amount);
-      const platformFee = Math.max(amount * config.percent, config.min);
+      // ✅ FIX: Better Gas Estimation for Tokens
+      if (['ETH', 'BSC', 'POLYGON'].includes(body.blockchain)) {
+        if (body.symbol && body.symbol !== body.blockchain) {
+              // Two token transfers (Main + Fee)
+              networkFee = (130000 * gasPrice) / 1e9;
+          } else {
+              // Two native transfers (Main + Fee)
+              networkFee = (42000 * gasPrice) / 1e9;
+          }
+      } else if (body.blockchain === 'BTC') {
+        networkFee = 0.00005;
+      }
 
-      return {
-        networkFee: networkFee.toFixed(6),
-        platformFee: platformFee.toFixed(6),
-        totalAmount: (amount + networkFee + platformFee).toFixed(6)
-      };
-    }
+      const amount = parseFloat(body.amount);
+      const platformFee = Math.max(amount * config.percent, config.min);
 
-   if (endpoint === 'transfer/send') {
-      const dek = await verifyPinAndGetDEK(body.pin);
+      return {
+        networkFee: networkFee.toFixed(6),
+        platformFee: platformFee.toFixed(6),
+        totalAmount: (amount + networkFee + platformFee).toFixed(6)
+      };
+    }
 
-      const { data: wData } = await supabase.from('customerWallets').select('privateKey').eq('uuid', user.id).eq('blockchain', body.blockchain).single();
-      const { data: wAddr } = await supabase.from('customerWalletAddr').select('address').eq('uuid', user.id).eq('blockchain', body.blockchain).single();
+   if (endpoint === 'transfer/send') {
+      const dek = await verifyPinAndGetDEK(body.pin);
 
-      const privateKey = await cryptoService.decryptThis(wData.privateKey, dek);
+      const { data: wData } = await supabase.from('customerWallets').select('privateKey').eq('uuid', user.id).eq('blockchain', body.blockchain).single();
+      const { data: wAddr } = await supabase.from('customerWalletAddr').select('address').eq('uuid', user.id).eq('blockchain', body.blockchain).single();
 
-      // 1. Get Network Data needed for signing (Nonce for ETH, UTXOs for BTC)
-      const nonce = await tatumService.getNonce(body.blockchain, wAddr.address);
-      const gasPrice = await tatumService.getGasPrice(body.blockchain);
-      const utxos = await tatumService.getUTXOs(body.blockchain, wAddr.address);
+      const privateKey = await cryptoService.decryptThis(wData.privateKey, dek);
 
-      // 2. Prepare Signed Transactions (Main + Fee)
-      const { signedMainTx, signedFeeTx, platformFee, blockchainFee } = await walletService.prepareTransactionWithFee(body.blockchain, {
-        privateKey,
-        to: body.to,
-        amount: body.amount,
-        nonce,
-        gasPrice,
-        utxos
-      });
+      const nonce = await tatumService.getNonce(body.blockchain, wAddr.address);
+      const gasPrice = await tatumService.getGasPrice(body.blockchain);
+      const utxos = await tatumService.getUTXOs(body.blockchain, wAddr.address);
 
-      if (!signedMainTx) throw new Error('Signing failed');
+      // ✅ FIX: Pass 'symbol: body.symbol' to the wallet service
+      const { signedMainTx, signedFeeTx, platformFee, blockchainFee } = await walletService.prepareTransactionWithFee(body.blockchain, {
+        privateKey,
+        to: body.to,
+        amount: body.amount,
+        nonce,
+        gasPrice,
+        utxos,
+        symbol: body.symbol // <--- CRITICAL ADDITION
+      });
 
-      // 3. Broadcast both transactions
-      const txId = await tatumService.broadcast(body.blockchain, signedMainTx, signedFeeTx);
+      if (!signedMainTx) throw new Error('Signing failed');
 
-      // 4. Save to DB
-      await supabase.from('transactions').insert({
-        uuid: user.id,
-        toAddress: body.to,
-        fromAddress: wAddr.address,
-        amount: body.amount,
-        txId: txId || 'Pending',
-        platformFee: platformFee,
-        blockchainFee: blockchainFee,
-        blockchain: body.blockchain,
-        status: 'completed'
-      });
+      const txId = await tatumService.broadcast(body.blockchain, signedMainTx, signedFeeTx);
 
-      return { success: true, txId };
-    }
+      await supabase.from('transactions').insert({
+        uuid: user.id,
+        toAddress: body.to,
+        fromAddress: wAddr.address,
+        amount: body.amount,
+        txId: txId || 'Pending',
+        platformFee: platformFee,
+        blockchainFee: blockchainFee,
+        blockchain: body.blockchain,
+        // Optional: Save the symbol to DB if you have a column for it, otherwise it defaults to blockchain name
+        symbol: body.symbol || body.blockchain,
+        status: 'completed'
+      });
+
+      return { success: true, txId };
+    }
 
     throw new Error('Endpoint not found');
 

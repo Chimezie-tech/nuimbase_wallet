@@ -7,6 +7,8 @@ import * as ecc from 'tiny-secp256k1'
 import { Keypair } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { derivePath } from 'ed25519-hd-key'
+import { getTokenInfo } from '../scripts/tokenConfig' // Import config
+
 
 if (typeof window !== 'undefined') window.Buffer = Buffer
 
@@ -44,10 +46,41 @@ const PLATFORM_ADDRESSES = {
 }
 
 const FEES = {
-  BTC: { min: 0.00001, percent: 0.005 },
-  ETH: { min: 0.0001, percent: 0.01 },
-  DEFAULT: { min: 0.001, percent: 0.01 },
+  // BTC: Increased min to cover high network dust, slightly lower % to beat Coinbase (0.5% -> 0.4%)
+  BTC: { min: 0.0009, percent: 0.004 },
+
+  // ETH: Increased min because Gas is expensive. 0.7% is the "Sweet Spot" for non-custodial.
+  ETH: { min: 0.008, percent: 0.009 },
+
+  // LTC: Low min to encourage use, but enough to be profitable.
+  LTC: { min: 0.01, percent: 0.005 },
+
+  // BSC/CELO/ONE/KLAYTN: These are high-speed. People use them for small amounts.
+  // We set a solid min so small $1 transfers still make you money.
+  BSC: { min: 0.005, percent: 0.004 },
+  CELO: { min: 0.1, percent: 0.004 },
+  // Harmony (ONE): Price is usually low, so we set a higher unit count for the min.
+  ONE: { min: 5.0, percent: 0.005 },
+
+  // XDC & KLAYTN: Often used for enterprise/stable transactions.
+  XDC: { min: 10.0, percent: 0.005 },
+  KLAYTN: { min: 1.0, percent: 0.005 },
+
+  // Algorand (ALGO): Very popular for speed. 0.1 ALGO is a standard "safe" profit floor.
+  ALGO: { min: 0.5, percent: 0.005 },
+
+  // KuCoin Community Chain (KCS): Similar to BSC, users expect low fees.
+  KCS: { min: 0.05, percent: 0.004 },
+
+  // DEFAULT: A safe catch-all
+  DEFAULT: { min: 0.005, percent: 0.006 },
 }
+
+// const FEES = {
+//   BTC: { min: 0.00001, percent: 0.005 },
+//   ETH: { min: 0.0001, percent: 0.01 },
+//   DEFAULT: { min: 0.001, percent: 0.01 },
+// }
 
 export default {
   getTransferFees(chain, amount) {
@@ -164,7 +197,7 @@ export default {
   },
 
   // 3. TRANSACTION PREPARATION
-  async prepareTransactionWithFee(chain, { privateKey, to, amount, nonce, gasPrice, utxos }) {
+  async prepareTransactionWithFee(chain, { privateKey, to, amount, nonce, gasPrice, utxos, symbol }) {
     // ✅ FIX: Normalize Solana name
     if (chain.toUpperCase() === 'SOL') chain = 'SOLANA'
 
@@ -175,21 +208,61 @@ export default {
     let platformAddr = PLATFORM_ADDRESSES[chain] || PLATFORM_ADDRESSES.DEFAULT
     if (chain === 'BTC' && USE_TESTNET) platformAddr = PLATFORM_ADDRESSES.BTC_TESTNET
 
+    // 1. CHECK IF THIS IS A TOKEN TRANSFER (USDT/USDC)
+    const tokenInfo = getTokenInfo(chain, symbol);
+
     // --- EVM LOGIC ---
     if (['ETH', 'BSC', 'POLYGON', 'CELO', 'XDC', 'ONE', 'KLAYTN'].includes(chain)) {
       const wallet = new ethers.Wallet(privateKey)
-      const amountBN = ethers.parseEther(amount.toString())
+      // const amountBN = ethers.parseEther(amount.toString())
       const chainId = getChainId(chain)
-      let feeVal = Math.max(parseFloat(amount) * config.percent, config.min)
-      const feeBN = ethers.parseEther(feeVal.toFixed(18))
+      // let feeVal = Math.max(parseFloat(amount) * config.percent, config.min)
+      // const feeBN = ethers.parseEther(feeVal.toFixed(18))
       const price = gasPrice ? ethers.parseUnits(gasPrice.toString(), 'gwei') : undefined
 
-      const txMain = { to, value: amountBN, gasLimit: 21000n, gasPrice: price, nonce, chainId }
-      const signedMainTx = await wallet.signTransaction(txMain)
-      const txFee = { to: platformAddr, value: feeBN, gasLimit: 21000n, gasPrice: price, nonce: nonce + 1, chainId }
-      const signedFeeTx = await wallet.signTransaction(txFee)
+      // A. TOKEN TRANSFER (USDT)
+      if (tokenInfo) {
+        const contractAddress = tokenInfo.address;
+        const decimals = tokenInfo.decimals;
 
-      return { signedMainTx, signedFeeTx, platformFee: feeVal, blockchainFee: 0 }
+        // Create Contract Interface
+        const abi = ["function transfer(address to, uint256 amount) returns (bool)"];
+        const iface = new ethers.Interface(abi);
+
+        // 1. Main Transfer Data
+        const amountBN = ethers.parseUnits(amount.toString(), decimals); // Use Token Decimals (e.g., 6)
+        const dataMain = iface.encodeFunctionData("transfer", [to, amountBN]);
+
+        // 2. Fee Transfer Data (Sending Fee in Tokens too? Or Native?)
+        // Assuming we take fee in the SAME Token:
+        let feeVal = Math.max(parseFloat(amount) * config.percent, config.min);
+        const feeBN = ethers.parseUnits(feeVal.toFixed(decimals), decimals);
+        const dataFee = iface.encodeFunctionData("transfer", [platformAddr, feeBN]);
+
+        // Construct Transactions (Value is 0 ETH because we are moving Tokens)
+        const txMain = { to: contractAddress, data: dataMain, value: 0, gasLimit: 100000n, gasPrice: price, nonce, chainId };
+        const signedMainTx = await wallet.signTransaction(txMain);
+
+        const txFee = { to: contractAddress, data: dataFee, value: 0, gasLimit: 100000n, gasPrice: price, nonce: nonce + 1, chainId };
+        const signedFeeTx = await wallet.signTransaction(txFee);
+
+        return { signedMainTx, signedFeeTx, platformFee: feeVal, blockchainFee: 0 };
+      }
+
+      // B. NATIVE COIN TRANSFER (ETH, BNB) - [This is your original logic]
+      else {
+        const amountBN = ethers.parseEther(amount.toString());
+        let feeVal = Math.max(parseFloat(amount) * config.percent, config.min);
+        const feeBN = ethers.parseEther(feeVal.toFixed(18));
+
+        const txMain = { to, value: amountBN, gasLimit: 21000n, gasPrice: price, nonce, chainId };
+        const signedMainTx = await wallet.signTransaction(txMain);
+
+        const txFee = { to: platformAddr, value: feeBN, gasLimit: 21000n, gasPrice: price, nonce: nonce + 1, chainId };
+        const signedFeeTx = await wallet.signTransaction(txFee);
+
+        return { signedMainTx, signedFeeTx, platformFee: feeVal, blockchainFee: 0 };
+      }
     }
 
     // --- BITCOIN LOGIC ---
