@@ -36,7 +36,6 @@
 
       <div class="divider"></div>
 
-      <!-- LOGIN FORM -->
       <template v-if="activeForm === 'login'">
         <div class="input-group">
           <label>Email</label>
@@ -61,14 +60,12 @@
         </div>
       </template>
 
-      <!-- SIGNUP FORM -->
       <template v-if="activeForm === 'signup'">
         <div class="input-group">
           <label>Email</label>
           <input v-model="form.email" type="email" class="input-field" placeholder="Your email" required />
         </div>
 
-        <!-- Integrated Country Selector -->
         <div class="input-group">
           <CountrySelector v-model="form.country" />
         </div>
@@ -90,7 +87,6 @@
         </div>
       </template>
 
-      <!-- FORGOT PASSWORD FORM -->
       <template v-if="activeForm === 'forgot'">
         <div class="input-group">
           <label>Email</label>
@@ -108,15 +104,14 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { supabase } from "@/scripts/supabase";
 import { useRouter } from "vue-router";
-import CountrySelector from "@/components/CountrySelector.vue"; // Imported Component
+import CountrySelector from "@/components/CountrySelector.vue";
 
 const router = useRouter();
 
 const activeForm = ref("login");
-// Added country to form state
 const form = ref({ email: "", password: "", country: "" });
 const isLoading = ref(false);
 const showPassword = ref(false);
@@ -137,9 +132,60 @@ const showToast = (message, type = "success") => {
 const clearInputs = () => {
   form.value.email = "";
   form.value.password = "";
-  form.value.country = ""; // Clear country as well
+  form.value.country = "";
 };
 
+// ==============================================================================
+// STEP 3: NATIVE TELEGRAM INTERCEPTOR HOOK
+// ==============================================================================
+onMounted(async () => {
+  // 1. Is the web view running inside an active Telegram container?
+  if (window.Telegram?.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+    const tg = window.Telegram.WebApp;
+
+    // Announce to Telegram architecture that our CSS layouts are drawn and ready
+    tg.ready();
+    tg.expand();
+
+    isLoading.value = true;
+    const tgUser = tg.initDataUnsafe.user;
+
+    try {
+      // Create a clean pseudo-email linked to their Telegram identity inside our DB constraints
+      const pseudoEmail = `tg_${tgUser.id}@nuimbase.telegram`;
+
+      // 2. Call the secure validation function we ran in the SQL step
+      const { data, error: rpcError } = await supabase.rpc('handle_telegram_login_secure', {
+        tg_id: tgUser.id,
+        tg_username: tgUser.username || 'unknown',
+        tg_first_name: tgUser.first_name || 'Anonymous',
+        raw_email: pseudoEmail,
+        received_hash: tg.initDataUnsafe.hash,
+        auth_data_string: tg.initData
+      });
+
+      if (rpcError) throw rpcError;
+
+      // 3. Establish a valid Supabase authenticated token session for this specific profile UUID
+      const { error: sessionError } = await supabase.auth.signInWithOtp({ email: pseudoEmail });
+
+      if (sessionError) throw sessionError;
+
+      showToast(`Welcome back, ${tgUser.first_name}!`, "success");
+      setTimeout(() => router.push("/dashboard"), 1200);
+
+    } catch (err) {
+      console.error("Telegram secure sync dropped:", err.message);
+      showToast("Telegram authentication unavailable. Use standard login.", "error");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+});
+
+// ==============================================================================
+// REGULAR EMAIL/PASSWORD ACTIONS (Kept completely safe and separate)
+// ==============================================================================
 const handleSubmit = async () => {
   const { email, password, country } = form.value;
   isLoading.value = true;
@@ -148,7 +194,6 @@ const handleSubmit = async () => {
     // LOGIN
     if (activeForm.value === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-
       clearInputs();
 
       if (error) {
@@ -162,7 +207,6 @@ const handleSubmit = async () => {
 
     // SIGNUP
     if (activeForm.value === "signup") {
-      // Validate Country Selection
       if (!country) {
         showToast("Please select your country of origin", "error");
         isLoading.value = false;
@@ -174,24 +218,22 @@ const handleSubmit = async () => {
       if (error) {
         showToast(error.message, "error");
         isLoading.value = false;
-        return; // Stop execution if auth fails
+        return;
       }
 
       if (data.user) {
-        // Insert extra data (including country) to customers table
         const { error: customerError } = await supabase
           .from('customers')
           .insert([
             {
               uuid: data.user.id,
               email: email,
-              country: country // Saving the selected country code
+              country: country
             }
           ]);
 
         if (customerError) {
           console.error("Error saving customer details:", customerError.message);
-          // Optional: You might want to show a warning, but the auth user is created
         }
       }
 
@@ -325,7 +367,6 @@ function gtag_report_conversion(url) {
   gap: 5px;
 }
 
-/* Password wrapper and icon styling */
 .password-wrapper {
   position: relative;
   display: flex;
@@ -392,7 +433,6 @@ function gtag_report_conversion(url) {
   text-decoration: underline;
 }
 
-/* ===== SPINNER OVERLAY ===== */
 .spinner-overlay {
   position: fixed;
   top: 0;
@@ -416,16 +456,10 @@ function gtag_report_conversion(url) {
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* ===== TOAST NOTIFICATION ===== */
 .toast {
   position: fixed;
   top: 20px;
@@ -465,26 +499,12 @@ function gtag_report_conversion(url) {
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-
-  to {
-    transform: translateX(400px);
-    opacity: 0;
-  }
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(400px); opacity: 0; }
 }
 </style>
